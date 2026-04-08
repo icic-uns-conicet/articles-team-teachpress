@@ -101,12 +101,21 @@ class OpenAlexTeamPlugin {
                 <td><?php echo esc_html($m->post_title); ?></td>
                 <td><?php echo esc_html(implode(', ', $teams_names)); ?></td>
                 <td>
-                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
-                        <input type="hidden" name="action" value="save_author_id">
-                        <input type="hidden" name="post_id" value="<?php echo $m->ID; ?>">
-                        <input type="text" name="openalex_id" value="<?php echo esc_attr($id); ?>" placeholder="A123456...">
-                        <button type="submit" class="button">Guardar</button>
-                    </form>
+                    <?php if ($id): ?>
+                        <span><?php echo esc_html($id); ?></span>
+                    <?php else: ?>
+                        <a href="#" class="editinline" data-id="<?php echo $m->ID; ?>">No ID</a>
+                    <?php endif; ?>
+                </td>
+                <td>
+                    <div class="hidden" id="inline-edit-<?php echo $m->ID; ?>">
+                        <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                            <input type="hidden" name="action" value="save_author_id">
+                            <input type="hidden" name="post_id" value="<?php echo $m->ID; ?>">
+                            <input type="text" name="openalex_id" placeholder="A123456...">
+                            <button type="submit" class="button">Guardar</button>
+                        </form>
+                    </div>
                 </td>
                 <td>
                     <?php if ($id): ?>
@@ -166,6 +175,17 @@ class OpenAlexTeamPlugin {
             echo '</ul>';
         }
     }
+    
+    public function enqueue_admin_scripts($hook) {
+        // Check if we're on the correct admin page
+        if ($hook !== 'toplevel_page_openalex-team') {
+            return;
+        }
+
+        // Enqueue the inline-edit-post.js script
+        wp_enqueue_script('inline-edit-post');
+    }
 }
 
 new OpenAlexTeamPlugin();
+add_action('admin_enqueue_scripts', [new OpenAlexTeamPlugin(), 'enqueue_admin_scripts']);
