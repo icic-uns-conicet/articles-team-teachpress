@@ -12,6 +12,7 @@ class OpenAlex_Publications_Page {
 
     public function __construct() {
         add_action( 'admin_menu', [ $this, 'register_menu' ] );
+        add_action( 'admin_post_openalex_save_visibility', [ $this, 'save_visibility' ] );
     }
 
     public function register_menu(): void {
@@ -41,8 +42,6 @@ class OpenAlex_Publications_Page {
         echo '</div>';
     }
 
-    // ── Aviso de resultado de sync ────────────────────────────────────────────
-
     private function maybe_show_sync_notice(): void {
         $key    = 'openalex_sync_result_' . get_current_user_id();
         $result = get_transient( $key );
@@ -53,15 +52,13 @@ class OpenAlex_Publications_Page {
         echo '<div class="notice notice-' . $type . ' is-dismissible"><p>';
         echo '<strong>' . esc_html( $result['member_name'] ) . '</strong> — ';
         echo 'Encontradas: <strong>' . intval( $result['total_found'] ) . '</strong>. ';
-        echo 'Nuevas: <strong>'      . intval( $result['added'] )       . '</strong>. ';
-        echo 'Ya existían: <strong>' . intval( $result['skipped'] )     . '</strong>.';
+        echo 'Nuevas: <strong>' . intval( $result['added'] ) . '</strong>. ';
+        echo 'Ya existían: <strong>' . intval( $result['skipped'] ) . '</strong>.';
         if ( ! empty( $result['errors'] ) ) {
             echo '<br><span style="color:#8a1a0a;">⚠ ' . esc_html( implode( '; ', $result['errors'] ) ) . '</span>';
         }
         echo '</p></div>';
     }
-
-    // ── Lista de todos los miembros con ID ────────────────────────────────────
 
     private function render_members_list(): void {
         $members = get_posts( [
@@ -120,8 +117,6 @@ class OpenAlex_Publications_Page {
         <?php
     }
 
-    // ── Detalle de un miembro ─────────────────────────────────────────────────
-
     private function render_member_detail( int $post_id ): void {
         $post = get_post( $post_id );
         if ( ! $post || $post->post_type !== 'team' ) {
@@ -160,25 +155,73 @@ class OpenAlex_Publications_Page {
 
         if ( ! OpenAlex_Helpers::teachpress_active() ) return;
 
-        $pubs = OpenAlex_Helpers::get_member_publications( $post_id );
+        $pubs = OpenAlex_Helpers::get_member_publications( $post_id, false );
         if ( empty( $pubs ) ) {
             echo '<p><em>No hay publicaciones importadas aún.</em></p>';
             return;
         }
 
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+        echo '<input type="hidden" name="action" value="openalex_save_visibility">';
+        echo '<input type="hidden" name="post_id" value="' . intval( $post_id ) . '">';
+        wp_nonce_field( 'openalex_save_visibility_' . $post_id, 'openalex_visibility_nonce' );
+
         echo '<p>Publicaciones en teachPress: <strong>' . count( $pubs ) . '</strong></p>';
-        echo '<table class="widefat striped"><thead><tr><th>Título</th><th>Tipo</th><th>Año</th><th>DOI</th></tr></thead><tbody>';
+        echo '<table class="widefat striped"><thead><tr><th>Título</th><th>Tipo</th><th>Año</th><th>DOI</th><th>Ocultar del listado</th></tr></thead><tbody>';
+
         foreach ( $pubs as $pub ) {
-            echo '<tr>'
-               . '<td>' . esc_html( $pub->title ) . '</td>'
-               . '<td><code>' . esc_html( $pub->type ) . '</code></td>'
-               . '<td>' . esc_html( $pub->year ) . '</td>'
-               . '<td>' . ( $pub->doi
-                    ? '<a href="https://doi.org/' . esc_attr( $pub->doi ) . '" target="_blank">' . esc_html( $pub->doi ) . '</a>'
-                    : '—' )
-               . '</td>'
-               . '</tr>';
+            $hidden = OpenAlex_Helpers::is_publication_hidden( (int) $pub->pub_id );
+
+            echo '<tr>';
+            echo '<td>' . esc_html( $pub->title ) . '</td>';
+            echo '<td><code>' . esc_html( $pub->type ) . '</code></td>';
+            echo '<td>' . esc_html( $pub->year ) . '</td>';
+            echo '<td>' . (
+                $pub->doi
+                    ? '<a href="https://doi.org/' . esc_attr( $pub->doi ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( $pub->doi ) . '</a>'
+                    : '—'
+            ) . '</td>';
+            echo '<td>';
+            echo '<label>';
+            echo '<input type="checkbox" name="hidden_pubs[]" value="' . intval( $pub->pub_id ) . '" ' . checked( $hidden, true, false ) . '>';
+            echo ' Ocultar';
+            echo '</label>';
+            echo '</td>';
+            echo '</tr>';
         }
+
         echo '</tbody></table>';
+        echo '<p style="margin-top:12px;"><button type="submit" class="button button-primary">Guardar visibilidad</button></p>';
+        echo '</form>';
+    }
+
+    public function save_visibility(): void {
+        $post_id = intval( $_POST['post_id'] ?? 0 );
+
+        if ( ! $post_id ) {
+            wp_die( 'ID inválido.', 400 );
+        }
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Sin permisos.', 403 );
+        }
+
+        if (
+            ! isset( $_POST['openalex_visibility_nonce'] ) ||
+            ! wp_verify_nonce( $_POST['openalex_visibility_nonce'], 'openalex_save_visibility_' . $post_id )
+        ) {
+            wp_die( 'Nonce inválido.', 403 );
+        }
+
+        $pubs = OpenAlex_Helpers::get_member_publications( $post_id, false );
+        $selected = isset( $_POST['hidden_pubs'] ) ? array_map( 'intval', (array) $_POST['hidden_pubs'] ) : [];
+
+        foreach ( $pubs as $pub ) {
+            $pub_id = (int) $pub->pub_id;
+            OpenAlex_Helpers::set_publication_hidden( $pub_id, in_array( $pub_id, $selected, true ) );
+        }
+
+        wp_redirect( admin_url( 'admin.php?page=openalex-publications&post_id=' . $post_id . '&updated=1' ) );
+        exit;
     }
 }
