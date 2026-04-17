@@ -102,26 +102,34 @@ class OpenAlex_Helpers
     }
 
     /**
-     * Formatea el listado de autores para la vista pública.
-     *
-     * @param string                   $author_string     "Smith, John and Doe, Jane and ..."
-     * @param bool                     $link_team_members Si true, enlaza autores miembros.
-     * @param array<string,string>|null $name_to_id_map   Mapa nombre_normalizado => openalex_author_id.
-     *                                                     Se pasa precargado para evitar queries extras.
-     * @param array<string,string>|null $members_map      Mapa openalex_id => permalink de miembros.
-     * @return string  HTML con posibles <a> o texto plano.
+     * @param string                    $author_string
+     * @param bool                      $link_team_members
+     * @param array<string,string>|null $name_to_id_map    nombre_normalizado => openalex_author_id
+     * @param array<string,string>|null $members_map       openalex_id => permalink
+     * @param int                       $current_post_id   Post ID del miembro cuya página se está viendo.
+     *                                                     Su nombre no se enlaza. 0 = sin exclusión.
      */
     public static function format_author_list(
         string $author_string,
         bool $link_team_members = true,
         ?array $name_to_id_map = null,
-        ?array $members_map = null
+        ?array $members_map = null,
+        int $current_post_id = 0
     ): string {
         $names = explode(' and ', $author_string);
         $short = [];
 
         if ($link_team_members && $members_map === null) {
             $members_map = self::get_team_members_map();
+        }
+
+        // openalex_id del miembro actual para excluirlo de los enlaces
+        $current_openalex_id = '';
+        if ($current_post_id > 0) {
+            $raw = trim(get_post_meta($current_post_id, 'openalex_id', true));
+            if ($raw) {
+                $current_openalex_id = strtoupper(basename($raw));
+            }
         }
 
         foreach (array_slice($names, 0, 5) as $name) {
@@ -136,15 +144,18 @@ class OpenAlex_Helpers
                 }
             }
 
-            $display      = $last . ($initials ? ' ' . $initials : '');
-            $linked       = false;
+            $display = $last . ($initials ? ' ' . $initials : '');
+            $linked  = false;
 
             if ($link_team_members && $name_to_id_map !== null && $members_map !== null) {
-                // Cruzar por openalex_author_id (robusto ante apellidos repetidos)
                 $normalized      = strtolower(trim($name));
                 $openalex_author = $name_to_id_map[$normalized] ?? null;
 
-                if ($openalex_author && isset($members_map[strtoupper($openalex_author)])) {
+                if (
+                    $openalex_author &&
+                    isset($members_map[strtoupper($openalex_author)]) &&
+                    strtoupper($openalex_author) !== $current_openalex_id
+                ) {
                     $url     = $members_map[strtoupper($openalex_author)];
                     $display = '<a href="' . esc_url($url) . '">' . esc_html($display) . '</a>';
                     $linked  = true;

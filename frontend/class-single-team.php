@@ -139,7 +139,8 @@ class OpenAlex_Single_Team
                                             $pub->author,
                                             true,
                                             $name_to_id_map,
-                                            $members_map
+                                            $members_map,
+                                            $this->post_id   // ← excluye al miembro actual del enlazado
                                         ); ?>
                                     </span>
                                 <?php endif; ?>
