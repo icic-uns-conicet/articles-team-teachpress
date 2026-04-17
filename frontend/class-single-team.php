@@ -184,6 +184,8 @@ class OpenAlex_Single_Team
 .openalex-pub-journal { color:#666; font-size:.9em; }
 .openalex-pub-doi { font-size:.8em; color:#888; text-decoration:none; }
 .openalex-pub-doi:hover { text-decoration:underline; }
+.openalex-pub-authors a { color: inherit; text-decoration: underline; text-underline-offset: 2px; opacity: 0.85; }
+.openalex-pub-authors a:hover { opacity: 1; }
         ';
     }
 }
