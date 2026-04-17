@@ -1,40 +1,72 @@
 <?php
+
 /**
  * Settings del plugin OpenAlex Team.
  *
  * @package OpenAlexTeam
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if (! defined('ABSPATH')) exit;
 
-class OpenAlex_Settings {
+class OpenAlex_Settings
+{
 
     const OPTION_GROUP = 'openalex_team_settings';
     const OPTION_NAME  = 'openalex_team_options';
     const PAGE_SLUG    = 'openalex-team-settings';
 
-    public function __construct() {
-        add_action( 'admin_menu',  [ $this, 'register_menu' ] );
-        add_action( 'admin_init',  [ $this, 'register_settings' ] );
-        add_action( 'admin_post_openalex_migrate_author_ids', [ $this, 'handle_migrate_author_ids' ] );
+    public function __construct()
+    {
+        add_action('admin_menu',  [$this, 'register_menu']);
+        add_action('admin_init',  [$this, 'register_settings']);
+        add_action('admin_post_openalex_migrate_author_ids', [$this, 'handle_migrate_author_ids']);
     }
 
-    public function register_menu(): void {
+    public function register_menu(): void
+    {
         add_submenu_page(
             'edit.php?post_type=team',
             'Configuración OpenAlex',
             'Configuración OpenAlex',
             'manage_options',
             self::PAGE_SLUG,
-            [ $this, 'render_page' ]
+            [$this, 'render_page']
         );
     }
 
-    public function register_settings(): void {
-        register_setting( self::OPTION_GROUP, self::OPTION_NAME, [
-            'sanitize_callback' => [ $this, 'sanitize_options' ],
-        ] );
+    public function register_settings(): void
+    {
+        register_setting(self::OPTION_GROUP, self::OPTION_NAME, [
+            'sanitize_callback' => [$this, 'sanitize_options'],
+        ]);
 
+        // ── Sección API ────────────────────────────────────────────────────────
+        add_settings_section(
+            'openalex_team_api_section',
+            'API de OpenAlex',
+            function () {
+                echo '<p>Configurá la API key para autenticar las requests a OpenAlex.</p>';
+            },
+            self::PAGE_SLUG
+        );
+
+        add_settings_field(
+            'api_key',
+            'API Key',
+            [$this, 'field_api_key'],
+            self::PAGE_SLUG,
+            'openalex_team_api_section'
+        );
+
+        add_settings_field(
+            'api_email',
+            'Email para User-Agent',
+            [$this, 'field_api_email'],
+            self::PAGE_SLUG,
+            'openalex_team_api_section'
+        );
+
+        // ── Sección General ────────────────────────────────────────────────────
         add_settings_section(
             'openalex_general',
             'General',
@@ -43,17 +75,9 @@ class OpenAlex_Settings {
         );
 
         add_settings_field(
-            'api_email',
-            'Email para OpenAlex API',
-            [ $this, 'field_api_email' ],
-            self::PAGE_SLUG,
-            'openalex_general'
-        );
-
-        add_settings_field(
             'sync_interval',
             'Sincronización automática',
-            [ $this, 'field_sync_interval' ],
+            [$this, 'field_sync_interval'],
             self::PAGE_SLUG,
             'openalex_general'
         );
@@ -61,29 +85,39 @@ class OpenAlex_Settings {
         add_settings_field(
             'max_results',
             'Máximo de publicaciones por miembro',
-            [ $this, 'field_max_results' ],
+            [$this, 'field_max_results'],
             self::PAGE_SLUG,
             'openalex_general'
         );
     }
 
-    public function sanitize_options( array $input ): array {
+    public function sanitize_options(array $input): array
+    {
         $output = [];
-        $output['api_email']    = sanitize_email( $input['api_email'] ?? '' );
-        $output['sync_interval'] = in_array( $input['sync_interval'] ?? '', [ 'manual', 'hourly', 'twicedaily', 'daily', 'weekly' ], true )
+        $output['api_email']    = sanitize_email($input['api_email'] ?? '');
+        $output['sync_interval'] = in_array($input['sync_interval'] ?? '', ['manual', 'hourly', 'twicedaily', 'daily', 'weekly'], true)
             ? $input['sync_interval']
             : 'daily';
-        $output['max_results']  = min( max( intval( $input['max_results'] ?? 200 ), 10 ), 1000 );
+        $output['max_results']  = min(max(intval($input['max_results'] ?? 200), 10), 1000);
         return $output;
     }
 
-    public function field_api_email(): void {
+    public function field_api_email(): void
+    {
         $opts = $this->get_options();
-        echo '<input type="email" name="' . self::OPTION_NAME . '[api_email]" value="' . esc_attr( $opts['api_email'] ) . '" class="regular-text">';
+        echo '<input type="email" name="' . self::OPTION_NAME . '[api_email]" value="' . esc_attr($opts['api_email']) . '" class="regular-text">';
         echo '<p class="description">Incluido en el User-Agent de las peticiones a OpenAlex para mejor rate-limiting.</p>';
     }
 
-    public function field_sync_interval(): void {
+    public function field_api_key(): void
+    {
+        $opts = $this->get_options();
+        echo '<input type="password" name="' . self::OPTION_NAME . '[api_key]" value="' . esc_attr($opts['api_key']) . '" class="regular-text" autocomplete="new-password">';
+        echo '<p class="description">API key de OpenAlex. Dejá en blanco si usás el acceso público.</p>';
+    }
+
+    public function field_sync_interval(): void
+    {
         $opts      = $this->get_options();
         $current   = $opts['sync_interval'];
         $intervals = [
@@ -94,51 +128,54 @@ class OpenAlex_Settings {
             'weekly'     => 'Semanal',
         ];
         echo '<select name="' . self::OPTION_NAME . '[sync_interval]">';
-        foreach ( $intervals as $value => $label ) {
-            echo '<option value="' . esc_attr( $value ) . '" ' . selected( $current, $value, false ) . '>' . esc_html( $label ) . '</option>';
+        foreach ($intervals as $value => $label) {
+            echo '<option value="' . esc_attr($value) . '" ' . selected($current, $value, false) . '>' . esc_html($label) . '</option>';
         }
         echo '</select>';
     }
 
-    public function field_max_results(): void {
+    public function field_max_results(): void
+    {
         $opts = $this->get_options();
-        echo '<input type="number" name="' . self::OPTION_NAME . '[max_results]" value="' . esc_attr( $opts['max_results'] ) . '" min="10" max="1000" step="10" class="small-text"> publicaciones';
+        echo '<input type="number" name="' . self::OPTION_NAME . '[max_results]" value="' . esc_attr($opts['max_results']) . '" min="10" max="1000" step="10" class="small-text"> publicaciones';
         echo '<p class="description">Límite por miembro en cada sincronización.</p>';
     }
 
-    public function render_page(): void {
-        ?>
+    public function render_page(): void
+    {
+?>
         <div class="wrap">
             <h1>Configuración OpenAlex Team</h1>
 
             <form method="post" action="options.php">
-                <?php settings_fields( self::OPTION_GROUP ); ?>
-                <?php do_settings_sections( self::PAGE_SLUG ); ?>
-                <?php submit_button( 'Guardar configuración' ); ?>
+                <?php settings_fields(self::OPTION_GROUP); ?>
+                <?php do_settings_sections(self::PAGE_SLUG); ?>
+                <?php submit_button('Guardar configuración'); ?>
             </form>
 
             <hr>
 
             <?php $this->render_tools_section(); ?>
         </div>
-        <?php
+    <?php
     }
 
-    private function render_tools_section(): void {
-        $result = get_transient( 'openalex_migrate_result_' . get_current_user_id() );
-        if ( $result ) {
-            delete_transient( 'openalex_migrate_result_' . get_current_user_id() );
+    private function render_tools_section(): void
+    {
+        $result = get_transient('openalex_migrate_result_' . get_current_user_id());
+        if ($result) {
+            delete_transient('openalex_migrate_result_' . get_current_user_id());
             $type = $result['errors'] === 0 ? 'success' : 'warning';
             echo '<div class="notice notice-' . $type . ' inline"><p>';
             echo '<strong>Migración completada.</strong> ';
-            echo 'Publicaciones procesadas: <strong>' . intval( $result['pubs'] ) . '</strong>. ';
-            echo 'Relaciones de autor actualizadas: <strong>' . intval( $result['updated'] ) . '</strong>. ';
-            if ( $result['errors'] > 0 ) {
-                echo 'Errores: <strong>' . intval( $result['errors'] ) . '</strong>.';
+            echo 'Publicaciones procesadas: <strong>' . intval($result['pubs']) . '</strong>. ';
+            echo 'Relaciones de autor actualizadas: <strong>' . intval($result['updated']) . '</strong>. ';
+            if ($result['errors'] > 0) {
+                echo 'Errores: <strong>' . intval($result['errors']) . '</strong>.';
             }
             echo '</p></div>';
         }
-        ?>
+    ?>
         <h2>Herramientas</h2>
         <table class="form-table" role="presentation">
             <tr>
@@ -146,9 +183,9 @@ class OpenAlex_Settings {
                     <label>Migrar IDs de autores</label>
                 </th>
                 <td>
-                    <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                         <input type="hidden" name="action" value="openalex_migrate_author_ids">
-                        <?php wp_nonce_field( 'openalex_migrate_author_ids', 'openalex_migrate_nonce' ); ?>
+                        <?php wp_nonce_field('openalex_migrate_author_ids', 'openalex_migrate_nonce'); ?>
                         <?php submit_button(
                             'Ejecutar migración',
                             'secondary',
@@ -167,19 +204,20 @@ class OpenAlex_Settings {
                 </td>
             </tr>
         </table>
-        <?php
+<?php
     }
 
-    public function handle_migrate_author_ids(): void {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( 'Sin permisos.', 403 );
+    public function handle_migrate_author_ids(): void
+    {
+        if (! current_user_can('manage_options')) {
+            wp_die('Sin permisos.', 403);
         }
 
         if (
-            ! isset( $_POST['openalex_migrate_nonce'] ) ||
-            ! wp_verify_nonce( $_POST['openalex_migrate_nonce'], 'openalex_migrate_author_ids' )
+            ! isset($_POST['openalex_migrate_nonce']) ||
+            ! wp_verify_nonce($_POST['openalex_migrate_nonce'], 'openalex_migrate_author_ids')
         ) {
-            wp_die( 'Nonce inválido.', 403 );
+            wp_die('Nonce inválido.', 403);
         }
 
         $result = $this->run_author_id_migration();
@@ -190,11 +228,12 @@ class OpenAlex_Settings {
             60
         );
 
-        wp_redirect( admin_url( 'edit.php?post_type=team&page=' . self::PAGE_SLUG ) );
+        wp_redirect(admin_url('edit.php?post_type=team&page=' . self::PAGE_SLUG));
         exit;
     }
 
-    private function run_author_id_migration(): array {
+    private function run_author_id_migration(): array
+    {
         global $wpdb;
 
         $rel_table  = $wpdb->prefix . 'teachpress_rel_pub_auth';
@@ -206,44 +245,44 @@ class OpenAlex_Settings {
         // buscamos autores cuyo nombre coincida con algún miembro del team
         // que tenga openalex_id, usando el mapa precargado.
 
-        $members_posts = get_posts( [
+        $members_posts = get_posts([
             'post_type'   => 'team',
             'numberposts' => -1,
             'post_status' => 'publish',
-            'meta_query'  => [ [
+            'meta_query'  => [[
                 'key'     => 'openalex_id',
                 'value'   => '',
                 'compare' => '!=',
-            ] ],
-        ] );
+            ]],
+        ]);
 
-        if ( empty( $members_posts ) ) {
-            return [ 'pubs' => 0, 'updated' => 0, 'errors' => 0 ];
+        if (empty($members_posts)) {
+            return ['pubs' => 0, 'updated' => 0, 'errors' => 0];
         }
 
         // Construir mapa nombre_normalizado => openalex_id del miembro
         $member_names = [];
-        foreach ( $members_posts as $post ) {
-            $raw_id   = trim( get_post_meta( $post->ID, 'openalex_id', true ) );
-            if ( ! $raw_id ) continue;
-            $clean_id = strtoupper( basename( $raw_id ) );
+        foreach ($members_posts as $post) {
+            $raw_id   = trim(get_post_meta($post->ID, 'openalex_id', true));
+            if (! $raw_id) continue;
+            $clean_id = strtoupper(basename($raw_id));
 
             // Buscar el nombre del miembro en teachPress authors
-            $name_in_tp = $wpdb->get_var( $wpdb->prepare(
+            $name_in_tp = $wpdb->get_var($wpdb->prepare(
                 "SELECT name FROM {$auth_table} WHERE name LIKE %s LIMIT 1",
-                '%' . $wpdb->esc_like( $post->post_title ) . '%'
-            ) );
+                '%' . $wpdb->esc_like($post->post_title) . '%'
+            ));
 
             // También buscar por apellido del post_title
-            $parts     = preg_split( '/\s+/', trim( $post->post_title ) );
-            $last_name = array_pop( $parts );
+            $parts     = preg_split('/\s+/', trim($post->post_title));
+            $last_name = array_pop($parts);
 
-            $normalized_title = strtolower( trim( $post->post_title ) );
-            $normalized_last  = strtolower( $last_name );
+            $normalized_title = strtolower(trim($post->post_title));
+            $normalized_last  = strtolower($last_name);
 
             $member_names[] = [
                 'clean_id'    => $clean_id,
-                'name_in_tp'  => $name_in_tp ? strtolower( $name_in_tp ) : null,
+                'name_in_tp'  => $name_in_tp ? strtolower($name_in_tp) : null,
                 'title_norm'  => $normalized_title,
                 'last_norm'   => $normalized_last,
             ];
@@ -258,52 +297,53 @@ class OpenAlex_Settings {
         $updated = 0;
         $errors  = 0;
 
-        foreach ( $pub_ids as $pub_id ) {
-            $pub_id = intval( $pub_id );
+        foreach ($pub_ids as $pub_id) {
+            $pub_id = intval($pub_id);
 
             // Obtener autores de esta publicación
-            $authors = $wpdb->get_results( $wpdb->prepare(
+            $authors = $wpdb->get_results($wpdb->prepare(
                 "SELECT r.author_id, a.name
                  FROM {$rel_table} r
                  INNER JOIN {$auth_table} a ON a.author_id = r.author_id
                  WHERE r.pub_id = %d",
                 $pub_id
-            ) );
+            ));
 
-            foreach ( $authors as $author ) {
-                $author_name_norm = strtolower( trim( $author->name ) );
-                $meta_key         = 'openalex_author_id_' . intval( $author->author_id );
+            foreach ($authors as $author) {
+                $author_name_norm = strtolower(trim($author->name));
+                $meta_key         = 'openalex_author_id_' . intval($author->author_id);
 
                 // Verificar si ya existe el meta
-                $exists = $wpdb->get_var( $wpdb->prepare(
+                $exists = $wpdb->get_var($wpdb->prepare(
                     "SELECT meta_id FROM {$meta_table}
                      WHERE pub_id = %d AND meta_key = %s LIMIT 1",
-                    $pub_id, $meta_key
-                ) );
+                    $pub_id,
+                    $meta_key
+                ));
 
-                if ( $exists ) continue;
+                if ($exists) continue;
 
                 // Buscar si este autor es un miembro
                 $matched_id = null;
-                foreach ( $member_names as $m ) {
+                foreach ($member_names as $m) {
                     if (
-                        ( $m['name_in_tp'] && $author_name_norm === $m['name_in_tp'] ) ||
-                        str_contains( $author_name_norm, $m['last_norm'] )
+                        ($m['name_in_tp'] && $author_name_norm === $m['name_in_tp']) ||
+                        str_contains($author_name_norm, $m['last_norm'])
                     ) {
                         $matched_id = $m['clean_id'];
                         break;
                     }
                 }
 
-                if ( ! $matched_id ) continue;
+                if (! $matched_id) continue;
 
-                $inserted = $wpdb->insert( $meta_table, [
+                $inserted = $wpdb->insert($meta_table, [
                     'pub_id'     => $pub_id,
                     'meta_key'   => $meta_key,
                     'meta_value' => $matched_id,
-                ], [ '%d', '%s', '%s' ] );
+                ], ['%d', '%s', '%s']);
 
-                if ( $inserted ) {
+                if ($inserted) {
                     $updated++;
                 } else {
                     $errors++;
@@ -312,19 +352,21 @@ class OpenAlex_Settings {
         }
 
         return [
-            'pubs'    => count( $pub_ids ),
+            'pubs'    => count($pub_ids),
             'updated' => $updated,
             'errors'  => $errors,
         ];
     }
 
-    public static function get_options(): array {
+    public static function get_options(): array
+    {
         $defaults = [
+            'api_key'       => '',
             'api_email'     => '',
             'sync_interval' => 'daily',
             'max_results'   => 200,
         ];
-        $saved = get_option( self::OPTION_NAME, [] );
-        return wp_parse_args( $saved, $defaults );
+        $saved = get_option(self::OPTION_NAME, []);
+        return wp_parse_args($saved, $defaults);
     }
 }
