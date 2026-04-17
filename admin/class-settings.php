@@ -369,4 +369,10 @@ class OpenAlex_Settings
         $saved = get_option(self::OPTION_NAME, []);
         return wp_parse_args($saved, $defaults);
     }
+
+    public static function get_api_key(): string
+    {
+        $opts = self::get_options();
+        return $opts['api_key'] ?? '';
+    }
 }
