@@ -25,6 +25,7 @@ class OpenAlex_Publications_Page
             $this,
             "ajax_toggle_publication_visibility",
         ]);
+        add_action("admin_post_openalex_invalidate_transients", [$this, "handle_invalidate_transients"]);
     }
 
     public function check_permissions(): void
@@ -56,7 +57,7 @@ class OpenAlex_Publications_Page
             esc_html__("Publicaciones OpenAlex", "openalex-team") .
             "</h1>";
 
-        $this->maybe_show_sync_notice();
+        $this->render_invalidate_transients_button();        $this->maybe_show_cache_cleared_notice();        $this->maybe_show_sync_notice();
 
         if ($post_id) {
             $this->render_member_detail($post_id);
@@ -99,6 +100,66 @@ class OpenAlex_Publications_Page
                 "</span>";
         }
         echo "</p></div>";
+    }
+
+    private function maybe_show_cache_cleared_notice(): void
+    {
+        $key = 'openalex_cache_cleared_' . get_current_user_id();
+        $cleared = get_transient($key);
+        if (!$cleared) {
+            return;
+        }
+        delete_transient($key);
+
+        echo '<div class="notice notice-success is-dismissible"><p>';
+        echo 'Caché de publicaciones limpiado correctamente.';
+        echo '</p></div>';
+    }
+
+    private function render_invalidate_transients_button(): void
+    {
+        ?>
+        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
+            <input type="hidden" name="action" value="openalex_invalidate_transients">
+            <?php wp_nonce_field('openalex_invalidate_transients', 'openalex_invalidate_nonce'); ?>
+            <?php submit_button('Limpiar caché de publicaciones', 'secondary', 'submit', false); ?>
+        </form>
+        <br><br>
+        <?php
+    }
+
+    public function handle_invalidate_transients(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die('Sin permisos.', 403);
+        }
+
+        if (
+            !isset($_POST['openalex_invalidate_nonce']) ||
+            !wp_verify_nonce($_POST['openalex_invalidate_nonce'], 'openalex_invalidate_transients')
+        ) {
+            wp_die('Nonce inválido.', 403);
+        }
+
+        // Clear all member publication caches
+        $members = get_posts([
+            'post_type'   => 'team',
+            'numberposts' => -1,
+            'meta_query'  => [[
+                'key'     => 'openalex_id',
+                'value'   => '',
+                'compare' => '!=',
+            ]],
+        ]);
+
+        foreach ($members as $member) {
+            OpenAlex_Helpers::clear_member_publications_cache($member->ID);
+        }
+
+        set_transient('openalex_cache_cleared_' . get_current_user_id(), true, 60);
+
+        wp_redirect(admin_url('admin.php?page=openalex-publications'));
+        exit;
     }
 
     private function render_members_list(): void
