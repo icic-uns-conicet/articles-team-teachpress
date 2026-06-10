@@ -454,20 +454,22 @@ class OpenAlex_Helpers
             ));
 
             if ($openalex_value) {
-                $normalized        = strtolower(trim($row->name));
-                $map[$normalized] = strtoupper($openalex_value);
-
                 $raw_ids = array_map('trim', explode('|', $openalex_value));
                 $clean_id = '';
 
                 foreach ($raw_ids as $id) {
                     // Extraer solo la parte del ID (ej: de 'https://.../A123' a 'A123')
-                    $clean_id = strtoupper(basename($id));                    
+                    $potential_id = strtoupper(basename($id));                    
                     // 3. Si logramos extraer un ID limpio, lo agregamos al mapa
-                    if ($clean_id) {
-                        $normalized_name = strtolower(trim($row->name));
-                        $map[$normalized_name] = $clean_id;
+                    if (!empty($potential_id)) {
+                        $clean_id = $potential_id;
+                        break;
                     }
+                }
+
+                if ($clean_id) {
+                    $normalized_name = strtolower(trim($row->name));
+                    $map[$normalized_name] = $clean_id;
                 }
             }
         }
@@ -492,5 +494,17 @@ class OpenAlex_Helpers
         }        
 
         return $map;
+    }
+    
+    public static function log( string $message ): void {
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+            // Opcional: Agregar timestamp y prefijo automáticamente
+            $formatted_message = sprintf(
+                "[%s] [OpenAlex] %s",
+                current_time( 'Y-m-d H:i:s' ),
+                $message
+            );
+            error_log( $formatted_message );
+        }
     }
 }
