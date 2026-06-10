@@ -132,6 +132,7 @@ class OpenAlex_Publications_Page
             ?>
         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
             <input type="hidden" name="action" value="openalex_invalidate_transients">
+            <input type="hidden" name="member_id" value="<?php echo esc_attr($member_id); ?>">
             <?php wp_nonce_field('openalex_invalidate_transients', 'openalex_invalidate_nonce'); ?>
             <?php submit_button($button_text, 'secondary', 'submit', false); ?>
         </form>
@@ -153,7 +154,7 @@ class OpenAlex_Publications_Page
         }
 
         //
-        $member_id = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
+        $member_id = isset($_POST['member_id']) ? intval($_POST['member_id']) : 0;
         
         if ($member_id > 0) {
             OpenAlex_Helpers::clear_member_publications_cache($member_id);
@@ -234,9 +235,7 @@ class OpenAlex_Publications_Page
                 $job = OpenAlex_Job_Queue::get_member_status($m->ID);
                 ?>
             <tr data-member-id="<?php echo esc_attr($m->ID); ?>">
-                <td><strong><?php echo esc_html(
-                    $m->post_title
-                ); ?></strong></td>
+                <td><strong><?php echo esc_html($m->post_title); ?></strong></td>
                 <td><?php echo esc_html($team_names); ?></td>
                 <td><code><?php echo esc_html($openalex_id); ?></code></td>
                 <td><?php echo esc_html($last_sync)
@@ -250,27 +249,13 @@ class OpenAlex_Publications_Page
                 <td class="openalex-status">
                     <?php
                     $color = "#646970";
-                    if ($job["status"] === "queued") {
-                        $color = "#996800";
-                    }
-                    if ($job["status"] === "running") {
-                        $color = "#135e96";
-                    }
-                    if ($job["status"] === "completed") {
-                        $color = "#0a7a20";
-                    }
-                    if ($job["status"] === "failed") {
-                        $color = "#b32d2e";
-                    }
+                    if ($job["status"] === "queued") {                        $color = "#996800";                    }
+                    if ($job["status"] === "running") {                       $color = "#135e96";                    }
+                    if ($job["status"] === "completed") {                     $color = "#0a7a20";                    }
+                    if ($job["status"] === "failed") {                        $color = "#b32d2e";                    }
 
-                    echo '<strong class="openalex-status-text" style="color:' .
-                        esc_attr($color) .
-                        ';">' .
-                        esc_html(strtoupper($job["status"])) .
-                        "</strong><br>";
-                    echo '<span class="openalex-status-message" style="color:#646970;">' .
-                        esc_html($job["message"]) .
-                        "</span>";
+                    echo '<strong class="openalex-status-text" style="color:' . esc_attr($color) . ';">' . esc_html(strtoupper($job["status"])) . "</strong><br>";
+                    echo '<span class="openalex-status-message" style="color:#646970;">' . esc_html($job["message"]) . "</span>";
                     ?>
                 </td>
                 <td>
