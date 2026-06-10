@@ -498,8 +498,12 @@ class OpenAlex_Settings
              LIMIT 5"
         ));
 
+        $member_names = array_map(function($m) { return $m['name'] . ' (última: ' . $m['date_str'] . ')'; }, $members);
+        OpenAlex_Helpers::log("Syncing all members. Oldest 5 synched members. | Names: " . implode(', ', $member_names));
+
         foreach ($members as $member_id) {
             OpenAlex_Job_Queue::enqueue_member_sync(intval($member_id));
+
         }
     }
 
