@@ -139,19 +139,8 @@ class OpenAlex_Single_Team
                                 <?php if ($pub->author): ?>
                                     <span class="openalex-pub-authors">
                                         <?php 
-                                                if ( defined('WP_DEBUG_LOG') && WP_DEBUG_LOG ) {
-            error_log( 
-                sprintf(
-                    '[OpenAlex] render_publications_html author %d| name-id %s | member-map %d ',
-                    
-                                            $pub->author,
-                                            print_r($name_to_id_map, true ),
-                                            print_r($members_map, true )
-                    )
-                );
-        }
-                                        
-                                        
+                                        OpenAlex_Helpers::log("Rendering authors for pub {$pub->pub_id} | Authors: " . implode(', ', $pub->author) . " | Name-ID map: " . print_r($name_to_id_map, true) . " | Members map: " . print_r($members_map, true));
+
                                         echo OpenAlex_Helpers::format_author_list(
                                             $pub->author,
                                             true,
