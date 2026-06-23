@@ -195,17 +195,21 @@ class OpenAlex_Admin_Columns {
             const $table = $(".openalex-members-table");
             if ($table.length === 0) return;
 
+            const activeStatuses = ["QUEUED", "RUNNING"];
             let previousState = {};
+            let hasActive = false;
+
             $table.find("tbody tr").each(function() {
                 const memberId = $(this).data("member-id");
                 const status = $(this).find(".openalex-status-text").text().trim().toUpperCase();
-                
                 if (memberId && status) {
                     previousState[memberId] = status;
+                    if (activeStatuses.includes(status)) hasActive = true;
                 }
             });
 
-            if (Object.keys(previousState).length === 0) return;
+            // Only start polling if at least one member is actively syncing.
+            if (!hasActive || Object.keys(previousState).length === 0) return;
 
             function checkSyncStatus() {
                 $.post(openalex_admin_vars.ajax_url, {
@@ -216,14 +220,22 @@ class OpenAlex_Admin_Columns {
                 }, function(response) {
                     if (response.success) {
                         let hasChanges = false;
+                        let stillActive = false;
                         $.each(response.data, function(postId, data) {
-                            if (previousState[postId] !== data.status) hasChanges = true;
+                            const newStatus = (data.status || "").toUpperCase();
+                            if (previousState[postId] !== newStatus) hasChanges = true;
+                            if (activeStatuses.includes(newStatus)) stillActive = true;
                         });
+
                         if (hasChanges) {
+                            // Reload once to show the updated state.
+                            // The page will not re-start polling unless new active jobs exist.
                             location.reload();
-                        } else {
+                        } else if (stillActive) {
+                            // Jobs still running, keep polling.
                             setTimeout(checkSyncStatus, 5000);
                         }
+                        // If no changes and no active jobs, stop polling silently.
                     } else {
                         setTimeout(checkSyncStatus, 10000);
                     }
