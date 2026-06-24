@@ -135,10 +135,11 @@ class OpenAlex_Helpers
             }
         }
 
-        OpenAlex_Helpers::log("format_author_list() called for author_string: '{$author_string}' |'.
-            ' current_openalex_ids: " . implode(', ', $current_openalex_ids) );    
+        OpenAlex_Helpers::log("format_author_list() called for author_string: '{$author_string}' |".
+            " current_openalex_ids: " . implode(', ', $current_openalex_ids) );    
 
         foreach (array_slice($names, 0, 5) as $name) {
+            OpenAlex_Helpers::log("name: " . $name);
             $parts    = explode(',', $name, 2);
             $last     = trim($parts[0]);
             $first    = isset($parts[1]) ? trim($parts[1]) : '';
@@ -156,24 +157,41 @@ class OpenAlex_Helpers
             if ($link_team_members && $name_to_id_map !== null && $members_map !== null) {
                 $normalized      = strtolower(trim($name));
                 $openalex_author = $name_to_id_map[$normalized] ?? null;
-                
-                // $result .= "<span id=\"". $name . $normalized . "--" . $openalex_author   . "\"></span>";
 
                 if ($openalex_author) {
-                    $openalex_author_upper = strtoupper($openalex_author);
+                    // El autor del paper puede tener múltiples IDs (ej: "A123|A456")
+                    $author_ids = array_map('trim', explode('|', strtoupper($openalex_author)));
                     
-                    // NUEVO: Verificar si coincide con cualquier ID del miembro actual
-                    $is_current_member = in_array($openalex_author_upper, $current_openalex_ids, true);
-                    
-                    if (
-                        isset($members_map[$openalex_author_upper]) &&
-                        ! $is_current_member  // ← No enlazar si es el miembro actual
-                    ) {
-                        $url = $members_map[$openalex_author_upper];
-                        $display = '<a href="' . esc_url($url) . '">' . esc_html($display) . '</a>';
-                        $linked = true;
+                    // Verificar si alguno de sus IDs coincide con los del miembro actual
+                    $is_current_member = false;
+                    foreach ($author_ids as $aid) {
+                        if (in_array($aid, $current_openalex_ids, true)) {
+                            $is_current_member = true;
+                            break;
+                        }
+                    }                   
+                        
+                    if (! $is_current_member) {
+                        OpenAlex_Helpers::log("openalex_author: " . $openalex_author);
+                        OpenAlex_Helpers::log("author_ids: " . print_r($author_ids, true));
+                        // Buscar el primer ID que exista en el mapa de miembros
+                        foreach ($author_ids as $aid) {
+                            OpenAlex_Helpers::log("aid: " . $aid);
+                            // OpenAlex_Helpers::log("members_map: " . print_r($members_map, true));
+                            if (isset($members_map[$aid])) {
+                                $url = $members_map[$aid];
+                                $display = '<a href="' . esc_url($url) . '">' . esc_html($display) . '</a>';
+                                $linked = true;
+                                OpenAlex_Helpers::log("linked");
+                                break;
+                            } else {OpenAlex_Helpers::log("not linked");}
+                        }
+                    }
+                    else {
+                        OpenAlex_Helpers::log("is current");
                     }
                 }
+
             }
 
             if (! $linked) {
@@ -450,8 +468,7 @@ class OpenAlex_Helpers
         if ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
             // Opcional: Agregar timestamp y prefijo automáticamente
             $formatted_message = sprintf(
-                "[%s] [OpenAlex] %s",
-                current_time( 'Y-m-d H:i:s' ),
+                "[OpenAlex] %s",
                 $message
             );
             error_log( $formatted_message );
