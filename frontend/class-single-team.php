@@ -139,11 +139,6 @@ class OpenAlex_Single_Team
                                 <?php if ($pub->author): ?>
                                     <span class="openalex-pub-authors">
                                         <?php 
-                                        OpenAlex_Helpers::log("Rendering authors for pub {$pub->pub_id} | Author: " . 
-                                            $pub->author . " | Name-ID map: " . 
-                                            print_r($name_to_id_map, true) . " | Members map: " . 
-                                            print_r($members_map, true));
-
                                         echo OpenAlex_Helpers::format_author_list(
                                             $pub->author,
                                             true,
