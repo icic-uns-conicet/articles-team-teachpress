@@ -138,6 +138,21 @@ useEffect(() => {
         });
     };
 
+    // Invalidate server-side cached HTML when selected IDs change
+    useEffect(() => {
+        // run only in editor (user is authenticated) and when selection is present
+        if (!selectedPublicationIds || selectedPublicationIds.length === 0) return;
+
+        // fire-and-forget POST to clear cache for these IDs
+        apiFetch({
+            path: '/openalex/v1/publications-cache/clear',
+            method: 'POST',
+            data: { ids: selectedPublicationIds }
+        }).catch(() => {
+            // don't surface editor errors; cache invalidation is best-effort
+        });
+    }, [selectedPublicationIds]);
+
     const blockProps = useBlockProps({
         className: 'openalex-publications-selector-block'
     });

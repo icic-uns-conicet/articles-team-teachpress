@@ -72,6 +72,18 @@ class OpenAlex_Blocks {
             'callback' => [$this, 'get_publications_by_ids'],
             'permission_callback' => '__return_true' // Público para el frontend
         ]);
+
+        // NUEVO: Limpiar cache de publicaciones por IDs
+        register_rest_route('openalex/v1', '/publications-cache/clear', [
+            'methods' => 'POST',
+            'callback' => [$this, 'clear_publications_cache'],
+            'permission_callback' => function() {
+                return current_user_can('edit_posts');
+            },
+            'args' => [
+                'ids' => [ 'required' => true ]
+            ]
+        ]);
     }
 
     /**
@@ -184,6 +196,33 @@ class OpenAlex_Blocks {
     }
 
     /**
+     * Clear cached rendered HTML for a set of publication IDs.
+     * Expects 'ids' as string "1,2,3" or array.
+     */
+    public function clear_publications_cache(WP_REST_Request $request): WP_REST_Response {
+        $ids_param = $request->get_param('ids');
+        if (empty($ids_param)) {
+            return new WP_REST_Response(['ok' => false, 'message' => 'No ids provided'], 400);
+        }
+
+        if (is_string($ids_param)) {
+            $ids = array_map('intval', explode(',', $ids_param));
+        } else {
+            $ids = array_map('intval', (array) $ids_param);
+        }
+        $ids = array_filter($ids);
+        if (empty($ids)) {
+            return new WP_REST_Response(['ok' => false, 'message' => 'No valid ids'], 400);
+        }
+
+        sort($ids, SORT_NUMERIC);
+        $cache_key = 'openalex_block_pubs_html_' . md5(implode(',', $ids));
+        delete_transient($cache_key);
+
+        return new WP_REST_Response(['ok' => true], 200);
+    }
+
+    /**
      * Renderizado del bloque en el frontend
      */
     public function render_publications_selector(array $attributes): string {
@@ -191,6 +230,20 @@ class OpenAlex_Blocks {
 
         if (empty($selected_ids)) {
             return '<p>' . esc_html__('No hay publicaciones seleccionadas.', 'openalex-team') . '</p>';
+        }
+        // Normalize and build a stable cache key (order-insensitive)
+        $selected_ids = array_map('intval', (array) $selected_ids);
+        $selected_ids = array_filter($selected_ids);
+        if (empty($selected_ids)) {
+            return '<p>' . esc_html__('Las publicaciones seleccionadas no están disponibles.', 'openalex-team') . '</p>';
+        }
+        sort($selected_ids, SORT_NUMERIC);
+        $cache_key = 'openalex_block_pubs_html_' . md5(implode(',', $selected_ids));
+
+        // Try transient (12 hours)
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            return $cached;
         }
 
         global $wpdb;
@@ -222,6 +275,9 @@ class OpenAlex_Blocks {
         ob_start();
         ?>
         <div class="openalex-selected-publications">
+        <h3 class="openalex-publications__title">
+                Publicaciones seleccionadas
+        </h3>
             <?php foreach ($grouped as $year => $pubs): ?>
                 <div class="openalex-publications__year-group">
                     <h4 class="openalex-publications__year"><?php echo esc_html($year); ?></h4>
@@ -269,7 +325,10 @@ class OpenAlex_Blocks {
             <?php endforeach; ?>
         </div>
         <?php
-        return ob_get_clean();
+        $html = ob_get_clean();
+        // Cachear HTML renderizado por 12 horas
+        set_transient($cache_key, $html, 12 * HOUR_IN_SECONDS);
+        return $html;
     }
 }     
 
