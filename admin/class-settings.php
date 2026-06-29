@@ -487,7 +487,7 @@ class OpenAlex_Settings
         global $wpdb;
 
         // Get the 5 oldest synched team members (by openalex_sync_finished_at)
-        $members = $wpdb->get_col($wpdb->prepare(
+        $members = $wpdb->get_col(
             "SELECT p.ID FROM {$wpdb->posts} p
              INNER JOIN {$wpdb->postmeta} pm_id ON p.ID = pm_id.post_id AND pm_id.meta_key = 'openalex_id'
              LEFT JOIN {$wpdb->postmeta} pm_date ON p.ID = pm_date.post_id AND pm_date.meta_key = 'openalex_sync_finished_at'
@@ -496,8 +496,8 @@ class OpenAlex_Settings
              AND pm_id.meta_value != ''
              ORDER BY CAST(pm_date.meta_value AS DATETIME) ASC, p.ID ASC
              LIMIT 5"
-        ));
-
+        );
+  
         OpenAlex_Helpers::log('Syncing all members. Oldest 5 synched members. | IDs: ' . implode(', ', $members));
 
         foreach ($members as $member_id) {
