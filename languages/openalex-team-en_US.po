@@ -1,54 +1,456 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: openalex-team 1.0\n"
-"POT-Creation-Date: 2026-06-29 00:00+0000\n"
-"PO-Revision-Date: 2026-06-29 00:00+0000\n"
-"Last-Translator: Your Name <you@example.com>\n"
-"Language-Team: Your Team <you@example.com>\n"
+"Project-Id-Version: openalex-team 4.2\n"
+"POT-Creation-Date: 2026-06-30 00:00+0000\n"
+"PO-Revision-Date: 2026-06-30 00:00+0000\n"
+"Last-Translator: Carlos Lorenzetti <icic-uns-conicet>\n"
+"Language-Team: ICIC-UNS-CONICET\n"
 "Language: en_US\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "No hay publicaciones seleccionadas."
-msgstr "There are no publications selected."
+#: team-teachpress-integration.php
+msgid "OpenAlex Team Publications"
+msgstr "OpenAlex Team Publications"
 
-msgid "Las publicaciones seleccionadas no están disponibles."
-msgstr "The selected publications are not available."
+#: team-teachpress-integration.php
+msgid "Integra Team (tlp-team) con OpenAlex y guarda publicaciones en teachPress"
+msgstr "Integrates Team (tlp-team) with OpenAlex and saves publications in teachPress"
 
-msgid "Sin año"
-msgstr "No year"
+# ─── class-helpers.php ───────────────────────────────────────────────────────
 
-msgid "Publicaciones seleccionadas"
-msgstr "Selected publications"
+#: includes/class-helpers.php
+msgid "Artículo"
+msgstr "Article"
 
+#: includes/class-helpers.php
+msgid "Capítulo"
+msgstr "Chapter"
+
+#: includes/class-helpers.php
+msgid "Libro"
+msgstr "Book"
+
+#: includes/class-helpers.php
+msgid "Conferencia"
+msgstr "Conference"
+
+#: includes/class-helpers.php
+msgid "Tesis"
+msgstr "Thesis"
+
+#: includes/class-helpers.php
+msgid "Informe"
+msgstr "Report"
+
+#: includes/class-helpers.php
+msgid "Preprint"
+msgstr "Preprint"
+
+#: includes/class-helpers.php
+msgid "Misc"
+msgstr "Misc"
+
+# ─── class-openalex-api.php ──────────────────────────────────────────────────
+
+#: core/class-openalex-api.php
+msgid "Error de conexión: "
+msgstr "Connection error: "
+
+#: core/class-openalex-api.php
+msgid "OpenAlex devolvió HTTP "
+msgstr "OpenAlex returned HTTP "
+
+# ─── class-job-queue.php ─────────────────────────────────────────────────────
+
+#: core/class-job-queue.php
+msgid "Action Scheduler no está disponible."
+msgstr "Action Scheduler is not available."
+
+#: core/class-job-queue.php
+msgid "Este miembro ya tiene una sincronización en curso o en cola."
+msgstr "This member already has a sync in progress or queued."
+
+#: core/class-job-queue.php
+msgid "En cola"
+msgstr "Queued"
+
+#: core/class-job-queue.php
+msgid "No se pudo encolar la tarea."
+msgstr "Could not queue the task."
+
+#: core/class-job-queue.php
+msgid "Sincronización encolada."
+msgstr "Sync queued."
+
+#: core/class-job-queue.php
+msgid "Procesando publicaciones..."
+msgstr "Processing publications..."
+
+#: core/class-job-queue.php
+msgid "teachPress no está activo."
+msgstr "teachPress is not active."
+
+#: core/class-job-queue.php
+msgid "Completado. Nuevas: %d, actualizadas: %d, omitidas: %d"
+msgstr "Completed. New: %d, updated: %d, skipped: %d"
+
+#: core/class-job-queue.php
+msgid "Sin actividad"
+msgstr "No activity"
+
+# ─── class-teachpress-import.php ─────────────────────────────────────────────
+
+#: core/class-teachpress-import.php
+msgid "El miembro no tiene OpenAlex ID."
+msgstr "Member does not have an OpenAlex ID."
+
+#: core/class-teachpress-import.php
+msgid "Work sin ID, omitido."
+msgstr "Work without ID, skipped."
+
+#: core/class-teachpress-import.php
+msgid "[Sin título]"
+msgstr "[No title]"
+
+#: core/class-teachpress-import.php
+msgid "Error al guardar '%s' en teachPress."
+msgstr "Error saving '%s' in teachPress."
+
+# ─── class-settings.php ──────────────────────────────────────────────────────
+
+#: admin/class-settings.php
 msgid "Configuración OpenAlex"
-msgstr "OpenAlex configuration"
+msgstr "OpenAlex Configuration"
 
+#: admin/class-settings.php
 msgid "API de OpenAlex"
-msgstr "OpenAlex API"   
+msgstr "OpenAlex API"
 
+#: admin/class-settings.php
 msgid "Configurá la API key para autenticar los pedidos a OpenAlex."
 msgstr "Set the API key to authenticate OpenAlex requests."
 
+#: admin/class-settings.php
 msgid "General"
 msgstr "General"
 
+#: admin/class-settings.php
 msgid "Sincronización automática"
-msgstr "Automatic synchronization"
+msgstr "Automatic Synchronization"
 
+#: admin/class-settings.php
 msgid "Email para User-Agent"
-msgstr "User-Agent email"
+msgstr "Email for User-Agent"
 
-msgid "La visibilidad de las publicaciones fue actualizada."
-msgstr "Publications visibility was updated."
-
+#: admin/class-settings.php
 msgid "Máximo de publicaciones por miembro"
-msgstr "Maximum number of publications per member"
+msgstr "Maximum publications per member"
 
+#: admin/class-settings.php
 msgid "Incluido en el User-Agent de las peticiones a OpenAlex para mejor rate-limiting."
 msgstr "Included in the User-Agent of requests to OpenAlex for improved rate limiting."
 
+#: admin/class-settings.php
 msgid "API key de OpenAlex. Dejá en blanco si usás el acceso público."
-msgstr "OpenAlex API key. Leave this field empty if you use the public API."
+msgstr "OpenAlex API key. Leave blank if using public access."
+
+#: admin/class-settings.php
+msgid "Solo manual"
+msgstr "Manual only"
+
+#: admin/class-settings.php
+msgid "Cada hora"
+msgstr "Hourly"
+
+#: admin/class-settings.php
+msgid "Dos veces al día"
+msgstr "Twice daily"
+
+#: admin/class-settings.php
+msgid "Diario"
+msgstr "Daily"
+
+#: admin/class-settings.php
+msgid "Semanal"
+msgstr "Weekly"
+
+#: admin/class-settings.php
+msgid "publicaciones"
+msgstr "publications"
+
+#: admin/class-settings.php
+msgid "Límite por miembro en cada sincronización."
+msgstr "Limit per member in each synchronization."
+
+#: admin/class-settings.php
+msgid "Configuración OpenAlex Team"
+msgstr "OpenAlex Team Configuration"
+
+#: admin/class-settings.php
+msgid "Herramientas"
+msgstr "Tools"
+
+#: admin/class-settings.php
+msgid "Migrar IDs de autores"
+msgstr "Migrate Author IDs"
+
+#: admin/class-settings.php
+msgid "Migración completada."
+msgstr "Migration completed."
+
+#: admin/class-settings.php
+msgid "Publicaciones procesadas: "
+msgstr "Publications processed: "
+
+#: admin/class-settings.php
+msgid "Relaciones de autor actualizadas: "
+msgstr "Author relationships updated: "
+
+#: admin/class-settings.php
+msgid "Errores: "
+msgstr "Errors: "
+
+# ─── class-admin-columns.php ─────────────────────────────────────────────────
+
+#: admin/class-admin-columns.php
+msgid "OpenAlex ID"
+msgstr "OpenAlex ID"
+
+#: admin/class-admin-columns.php
+msgid "Última sincr."
+msgstr "Last sync"
+
+#: admin/class-admin-columns.php
+msgid "Ver publicaciones"
+msgstr "View publications"
+
+# ─── class-admin-sync.php ────────────────────────────────────────────────────
+
+#: admin/class-admin-sync.php
+msgid "La sincronización del miembro %s fue encolada."
+msgstr "Sync for member %s has been queued."
+
+# ─── class-publications-page.php ─────────────────────────────────────────────
+
+#: admin/class-publications-page.php
+msgid "Publicaciones OpenAlex"
+msgstr "OpenAlex Publications"
+
+#: admin/class-publications-page.php
+msgid "🗑️ Limpiar caché miembro"
+msgstr "🗑️ Clear member cache"
+
+#: admin/class-publications-page.php
+msgid "Limpiar caché de publicaciones"
+msgstr "Clear publications cache"
+
+#: admin/class-publications-page.php
+msgid "Caché del miembro \"%s\" limpiada con éxito."
+msgstr "Cache for member \"%s\" cleared successfully."
+
+#: admin/class-publications-page.php
+msgid "Caché de todas las publicaciones limpiada con éxito."
+msgstr "Cache for all publications cleared successfully."
+
+#: admin/class-publications-page.php
+msgid "Miembros con OpenAlex ID:"
+msgstr "Members with OpenAlex ID:"
+
+#: admin/class-publications-page.php
+msgid "No hay miembros con OpenAlex ID. "
+msgstr "No members with OpenAlex ID. "
+
+#: admin/class-publications-page.php
+msgid " Asignalos desde la lista de Team."
+msgstr " Assign them from the Team list."
+
+#: admin/class-publications-page.php
+msgid "Nombre"
+msgstr "Name"
+
+#: admin/class-publications-page.php
+msgid "Equipos"
+msgstr "Teams"
+
+#: admin/class-publications-page.php
+msgid "Última sync"
+msgstr "Last sync"
+
+#: admin/class-publications-page.php
+msgid "Estado"
+msgstr "Status"
+
+#: admin/class-publications-page.php
+msgid "Acción"
+msgstr "Action"
+
+#: admin/class-publications-page.php
+msgid "Nunca"
+msgstr "Never"
+
+#: admin/class-publications-page.php
+msgid "Sincronizar"
+msgstr "Sync"
+
+#: admin/class-publications-page.php
+msgid "Miembro no encontrado."
+msgstr "Member not found."
+
+#: admin/class-publications-page.php
+msgid "← Volver"
+msgstr "← Back"
+
+#: admin/class-publications-page.php
+msgid "Este miembro no tiene OpenAlex ID."
+msgstr "This member does not have an OpenAlex ID."
+
+#: admin/class-publications-page.php
+msgid "OpenAlex ID:"
+msgstr "OpenAlex ID:"
+
+#: admin/class-publications-page.php
+msgid "Última sync:"
+msgstr "Last sync:"
+
+#: admin/class-publications-page.php
+msgid "La visibilidad de las publicaciones fue actualizada."
+msgstr "Publications visibility was updated."
+
+#: admin/class-publications-page.php
+msgid "No hay publicaciones importadas aún."
+msgstr "No publications imported yet."
+
+#: admin/class-publications-page.php
+msgid "Filtrar por año"
+msgstr "Filter by year"
+
+#: admin/class-publications-page.php
+msgid "Filtrar por tipo"
+msgstr "Filter by type"
+
+#: admin/class-publications-page.php
+msgid "Filtrar por estado"
+msgstr "Filter by status"
+
+#: admin/class-publications-page.php
+msgid "Ocultas"
+msgstr "Hidden"
+
+#: admin/class-publications-page.php
+msgid "Visibles"
+msgstr "Visible"
+
+#: admin/class-publications-page.php
+msgid "Filtrar"
+msgstr "Filter"
+
+#: admin/class-publications-page.php
+msgid "Limpiar filtros"
+msgstr "Clear filters"
+
+#: admin/class-publications-page.php
+msgid "Guardar visibilidad"
+msgstr "Save visibility"
+
+#: admin/class-publications-page.php
+msgid "En cola..."
+msgstr "Queued..."
+
+#: admin/class-publications-page.php
+msgid "Procesando..."
+msgstr "Processing..."
+
+#: admin/class-publications-page.php
+msgid "↻ Re-sincronizar publicaciones"
+msgstr "↻ Re-sync publications"
+
+#: admin/class-publications-page.php
+msgid "⬇ Sincronizar publicaciones"
+msgstr "⬇ Sync publications"
+
+#: admin/class-publications-page.php
+msgid "Título"
+msgstr "Title"
+
+#: admin/class-publications-page.php
+msgid "Tipo"
+msgstr "Type"
+
+#: admin/class-publications-page.php
+msgid "Año"
+msgstr "Year"
+
+#: admin/class-publications-page.php
+msgid "Ocultar del listado"
+msgstr "Hide from listing"
+
+#: admin/class-publications-page.php
+msgid "Oculta"
+msgstr "Hidden"
+
+#: admin/class-publications-page.php
+msgid "No hay publicaciones que coincidan con los filtros."
+msgstr "No publications match the filters."
+
+#: admin/class-publications-page.php
+msgid "ID de publicación inválido."
+msgstr "Invalid publication ID."
+
+#: admin/class-publications-page.php
+msgid "Sin permisos."
+msgstr "No permissions."
+
+#: admin/class-publications-page.php
+msgid "Publicación ocultada."
+msgstr "Publication hidden."
+
+#: admin/class-publications-page.php
+msgid "Publicación visible."
+msgstr "Publication visible."
+
+# ─── class-single-team.php ───────────────────────────────────────────────────
+
+#: frontend/class-single-team.php
+msgid "Publicaciones"
+msgstr "Publications"
+
+#: frontend/class-single-team.php
+msgid "Sin año"
+msgstr "No year"
+
+# ─── blocks/class-blocks.php ─────────────────────────────────────────────────
+
+#: blocks/class-blocks.php
+msgid "No hay publicaciones seleccionadas."
+msgstr "No publications selected."
+
+#: blocks/class-blocks.php
+msgid "Las publicaciones seleccionadas no están disponibles."
+msgstr "The selected publications are not available."
+
+#: blocks/class-blocks.php
+msgid "Publicaciones seleccionadas"
+msgstr "Selected publications"
+
+#: blocks/class-blocks.php
+msgid "by"
+msgstr "by"
+
+#: blocks/class-blocks.php
+msgid "DOI:"
+msgstr "DOI:"
+
+#: blocks/class-blocks.php
+msgid "No ids provided"
+msgstr "No ids provided"
+
+#: blocks/class-blocks.php
+msgid "No valid ids"
+msgstr "No valid ids"
+
+#: blocks/class-blocks.php
+msgid "ID de miembro inválido"
+msgstr "Invalid member ID"
