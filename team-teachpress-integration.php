@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OpenAlex Team Publications
  * Description: Integra Team (tlp-team) con OpenAlex y guarda publicaciones en teachPress
- * Version:     4.1
+ * Version:     4.2
  * Author:      Carlos Lorenzetti
  * Text Domain: openalex-team
  */
@@ -38,12 +38,26 @@ require_once OPENALEX_TEAM_PATH . 'frontend/class-single-team.php';
 class OpenAlexTeamPlugin {
 
     public function __construct() {
+
+        add_action( 'plugins_loaded', [ $this, 'load_textdomain' ] );
+
         new OpenAlex_Settings();
         new OpenAlex_Job_Queue();
         new OpenAlex_Admin_Columns();
         new OpenAlex_Admin_Sync();
         new OpenAlex_Publications_Page();
         new OpenAlex_Single_Team();
+    }
+
+    /**
+     * Cargar el text domain del plugin para traducciones .po/.mo.
+     */
+    public function load_textdomain(): void {
+        load_plugin_textdomain(
+            'openalex-team',
+            false,
+            dirname(plugin_basename(__FILE__)) . '/languages'
+        );
     }
 }
 

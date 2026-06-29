@@ -1,0 +1,54 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: openalex-team 1.0\n"
+"POT-Creation-Date: 2026-06-29 00:00+0000\n"
+"PO-Revision-Date: 2026-06-29 00:00+0000\n"
+"Last-Translator: Your Name <you@example.com>\n"
+"Language-Team: Your Team <you@example.com>\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "No hay publicaciones seleccionadas."
+msgstr "There are no publications selected."
+
+msgid "Las publicaciones seleccionadas no están disponibles."
+msgstr "The selected publications are not available."
+
+msgid "Sin año"
+msgstr "No year"
+
+msgid "Publicaciones seleccionadas"
+msgstr "Selected publications"
+
+msgid "Configuración OpenAlex"
+msgstr "OpenAlex configuration"
+
+msgid "API de OpenAlex"
+msgstr "OpenAlex API"   
+
+msgid "Configurá la API key para autenticar los pedidos a OpenAlex."
+msgstr "Set the API key to authenticate OpenAlex requests."
+
+msgid "General"
+msgstr "General"
+
+msgid "Sincronización automática"
+msgstr "Automatic synchronization"
+
+msgid "Email para User-Agent"
+msgstr "User-Agent email"
+
+msgid "La visibilidad de las publicaciones fue actualizada."
+msgstr "Publications visibility was updated."
+
+msgid "Máximo de publicaciones por miembro"
+msgstr ""
+
+msgid "Incluido en el User-Agent de las peticiones a OpenAlex para mejor rate-limiting."
+msgstr "Included in the User-Agent of requests to OpenAlex for improved rate limiting."
+
+msgid "API key de OpenAlex. Dejá en blanco si usás el acceso público."
+msgstr "OpenAlex API key. Leave this field empty if you use the public API."
