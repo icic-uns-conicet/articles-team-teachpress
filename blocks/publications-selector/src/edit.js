@@ -144,30 +144,26 @@ export default function Edit({ attributes, setAttributes }) {
 
     return (
         <>
-            <InspectorControls>
-                <PanelBody title={__('Configuración', 'openalex-team')}>
-                    <SelectControl
-                        label={__('Miembro del equipo (para buscar)', 'openalex-team')}
-                        value={selectedMemberId}
-                        options={[
-                            { label: __('Seleccionar miembro...', 'openalex-team'), value: 0 },
-                            ...members.map(m => ({
-                                label: m.title,
-                                value: m.id
-                            }))
-                        ]}
-                        onChange={(value) => setSelectedMemberId(parseInt(value))}
-                        help={__('Selecciona un miembro para buscar sus publicaciones. Puedes cambiar de miembro después sin perder las publicaciones ya seleccionadas.', 'openalex-team')}
-                    />
-                </PanelBody>
-            </InspectorControls>
-
             <div {...blockProps}>
                 <h3>{__('Publicaciones OpenAlex Seleccionadas', 'openalex-team')}</h3>
 
+                <SelectControl
+                    label={__('Miembro del equipo (para buscar)', 'openalex-team')}
+                    value={selectedMemberId}
+                    options={[
+                        { label: __('Seleccionar miembro...', 'openalex-team'), value: 0 },
+                        ...members.map(m => ({
+                            label: m.title,
+                            value: m.id
+                        }))
+                    ]}
+                    onChange={(value) => setSelectedMemberId(parseInt(value))}
+                    help={__('Selecciona un miembro para buscar sus publicaciones. Puedes cambiar de miembro después sin perder las publicaciones ya seleccionadas.', 'openalex-team')}
+                />
+
                 {!selectedMemberId && (
                     <Notice status="info" isDismissible={false}>
-                        {__('Selecciona un miembro del equipo en el panel lateral para comenzar a buscar publicaciones.', 'openalex-team')}
+                        {__('Selecciona un miembro del equipo arriba para comenzar a buscar publicaciones.', 'openalex-team')}
                     </Notice>
                 )}
 
