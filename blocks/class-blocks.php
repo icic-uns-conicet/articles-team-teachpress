@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 class OpenAlex_Blocks {
 
     public function __construct() {
-        add_action('init', [$this, 'register_blocks']);
+        add_action('init', [$this, 'register_blocks']);        
         add_action('rest_api_init', [$this, 'register_rest_routes']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_block_styles']);
     }
@@ -269,7 +269,7 @@ class OpenAlex_Blocks {
         // Agrupar por año
         $grouped = [];
         foreach ($publications as $pub) {
-            $year = $pub->year ?: __('Sin año', 'openalex-team');
+            $year = $pub->year ?: esc_html__('Sin año', 'openalex-team');
             $grouped[$year][] = $pub;
         }
         krsort($grouped); // Ordenar por año descendente
@@ -278,7 +278,7 @@ class OpenAlex_Blocks {
         ?>
         <div class="openalex-selected-publications">
         <h3 class="openalex-publications__title">
-                Publicaciones seleccionadas
+                <?php echo esc_html__('Publicaciones seleccionadas', 'openalex-team'); ?>
         </h3>
             <?php foreach ($grouped as $year => $pubs): ?>
                 <div class="openalex-publications__year-group">
@@ -317,7 +317,7 @@ class OpenAlex_Blocks {
                                 <?php endif; ?>
                                 <?php if ($pub->doi): ?>
                                     <a class="openalex-pub-doi" href="<?php echo esc_url('https://doi.org/' . $pub->doi); ?>" target="_blank" rel="noopener noreferrer">
-                                        DOI: <?php echo esc_html($pub->doi); ?>
+                                        <?php echo esc_html('DOI:'); echo esc_html($pub->doi); ?>
                                     </a>
                                 <?php endif; ?>
                             </li>

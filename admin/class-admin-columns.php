@@ -39,8 +39,8 @@ class OpenAlex_Admin_Columns {
         foreach ( $columns as $key => $label ) {
             $new[ $key ] = $label;
             if ( $key === 'title' ) {
-                $new['openalex_id']        = 'OpenAlex ID';
-                $new['openalex_last_sync'] = 'Última sync';
+                $new['openalex_id']        = __('OpenAlex ID', "openalex-team");
+                $new['openalex_last_sync'] = __('Última sincr.', "openalex-team");
             }
         }
         return $new;
@@ -82,8 +82,10 @@ class OpenAlex_Admin_Columns {
         if ( $post_type !== 'team' ) return;
         $selected = isset( $_GET['team_designation'] ) ? sanitize_text_field( $_GET['team_designation'] ) : '';
         $terms    = get_terms( [ 'taxonomy' => 'team_designation', 'hide_empty' => false ] );
-        if ( empty( $terms ) || is_wp_error( $terms ) ) return;
-        echo '<select name="team_designation"><option value="">' . esc_html__( 'Todos los equipos', 'openalex-team' ) . '</option>';
+        if ( empty( $terms ) || is_wp_error( $terms ) ) return;        ?>
+        <select name="team_designation">
+            <option value=""><?php echo esc_html__( 'Todos los equipos', 'openalex-team' ); ?></option>
+        <?php
         foreach ( $terms as $t ) {
             printf(
                 '<option value="%s"%s>%s</option>',
@@ -91,8 +93,8 @@ class OpenAlex_Admin_Columns {
                 selected( $selected, $t->slug, false ),
                 esc_html( $t->name )
             );
-        }
-        echo '</select>';
+        } ?>
+        </select><?php
     }
 
     public function taxonomy_filter_query( \WP_Query $query ): void {

@@ -29,8 +29,8 @@ class OpenAlex_Settings
     {
         add_submenu_page(
             'edit.php?post_type=team',
-            'Configuración OpenAlex',
-            'Configuración OpenAlex',
+            esc_html__('Configuración OpenAlex', 'openalex-team'),
+            esc_html__('Configuración OpenAlex', 'openalex-team'),
             'manage_options',
             self::PAGE_SLUG,
             [$this, 'render_page']
@@ -46,9 +46,9 @@ class OpenAlex_Settings
         // ── Sección API ────────────────────────────────────────────────────────
         add_settings_section(
             'openalex_team_api_section',
-            'API de OpenAlex',
+            __('API de OpenAlex', 'openalex-team'),
             function () {
-                echo '<p>Configurá la API key para autenticar las requests a OpenAlex.</p>';
+                echo '<p>'.esc_html__('Configurá la API key para autenticar los pedidos a OpenAlex.', 'openalex-team').'</p>';
             },
             self::PAGE_SLUG
         );
@@ -63,7 +63,7 @@ class OpenAlex_Settings
 
         add_settings_field(
             'api_email',
-            'Email para User-Agent',
+            __('Email para User-Agent', 'openalex-team'),
             [$this, 'field_api_email'],
             self::PAGE_SLUG,
             'openalex_team_api_section'
@@ -72,14 +72,14 @@ class OpenAlex_Settings
         // ── Sección General ────────────────────────────────────────────────────
         add_settings_section(
             'openalex_general',
-            'General',
+            __('General', 'openalex-team'),
             '__return_false',
             self::PAGE_SLUG
         );
 
         add_settings_field(
             'sync_interval',
-            'Sincronización automática',
+            __('Sincronización automática', 'openalex-team'),
             [$this, 'field_sync_interval'],
             self::PAGE_SLUG,
             'openalex_general'
@@ -87,7 +87,7 @@ class OpenAlex_Settings
 
         add_settings_field(
             'max_results',
-            'Máximo de publicaciones por miembro',
+            __('Máximo de publicaciones por miembro', 'openalex-team'),
             [$this, 'field_max_results'],
             self::PAGE_SLUG,
             'openalex_general'
@@ -114,16 +114,42 @@ class OpenAlex_Settings
 
     public function field_api_email(): void
     {
-        $opts = $this->get_options();
-        echo '<input type="email" name="' . self::OPTION_NAME . '[api_email]" value="' . esc_attr($opts['api_email']) . '" class="regular-text">';
-        echo '<p class="description">Incluido en el User-Agent de las peticiones a OpenAlex para mejor rate-limiting.</p>';
+        $opts = $this->get_options();        ?>
+        <input
+            type="email"
+            name="<?php echo esc_attr( self::OPTION_NAME ); ?>[api_email]"
+            value="<?php echo esc_attr( $opts['api_email'] ); ?>"
+            class="regular-text"
+        >
+        <p class="description">
+            <?php
+            echo esc_html__(
+                'Incluido en el User-Agent de las peticiones a OpenAlex para mejor rate-limiting.',
+                'openalex-team'
+            );
+            ?>
+        </p><?php
     }
 
     public function field_api_key(): void
     {
         $opts = $this->get_options();
-        echo '<input type="password" name="' . self::OPTION_NAME . '[api_key]" value="' . esc_attr($opts['api_key']) . '" class="regular-text" autocomplete="new-password">';
-        echo '<p class="description">API key de OpenAlex. Dejá en blanco si usás el acceso público.</p>';
+        ?><input
+            type="password"
+            name="<?php echo esc_attr( self::OPTION_NAME ); ?>[api_key]"
+            value="<?php echo esc_attr( $opts['api_key'] ); ?>"
+            class="regular-text"
+            autocomplete="new-password"
+        >
+        <p class="description">
+            <?php
+            echo esc_html__(
+                'API key de OpenAlex. Dejá en blanco si usás el acceso público.',
+                'openalex-team'
+            );
+            ?>
+        </p><?php
+
     }
 
     public function field_sync_interval(): void

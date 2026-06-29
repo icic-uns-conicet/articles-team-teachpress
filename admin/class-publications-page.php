@@ -337,12 +337,14 @@ class OpenAlex_Publications_Page
         echo "</p>";
 
         if (isset($_GET["updated"]) && "1" === $_GET["updated"]) {
-            echo '<div class="notice notice-success inline"><p>La visibilidad de las publicaciones fue actualizada.</p></div>';
+            echo '<div class="notice notice-success inline"><p>'.
+                esc_html__('La visibilidad de las publicaciones fue actualizada.', 'openalex-team').'</p></div>';
         }
 
         $pubs = OpenAlex_Helpers::get_member_publications($post_id, false);
         if (empty($pubs)) {
-            echo "<p><em>No hay publicaciones importadas aún.</em></p>";
+            echo '<p><em>'.
+                esc_html__('No hay publicaciones importadas aún.', 'openalex-team' ).'</em></p>';
         } else {
             $items = array_map(function ($pub) {
                 return [
@@ -437,7 +439,7 @@ class OpenAlex_Publications_Page
                 ">Visibles</option>";
             echo "</select>";
 
-            submit_button("Filtrar", "secondary", "", false);
+            submit_button(__("Filtrar"), "secondary", "", false);
 
             if ($current_year || $current_type || $current_hidden) {
                 $clear_url = admin_url(
@@ -601,7 +603,7 @@ class OpenAlex_Publications_Page
 
         if (!$pub_id) {
             wp_send_json_error(
-                ["message" => "ID de publicación inválido."],
+                ["message" => __("ID de publicación inválido.", "openalex-team")],
                 400
             );
         }
@@ -612,8 +614,8 @@ class OpenAlex_Publications_Page
             "pub_id" => $pub_id,
             "hidden" => (bool) $hidden,
             "message" => $hidden
-                ? "Publicación ocultada."
-                : "Publicación visible.",
+                ? __("Publicación ocultada.", "openalex-team")
+                : __("Publicación visible.", "openalex-team"),
         ]);
     }
 
@@ -732,11 +734,11 @@ class OpenAlex_Publications_Table extends WP_List_Table
     public function get_columns()
     {
         return [
-            "title" => "Título",
-            "type" => "Tipo",
-            "year" => "Año",
+            "title" => __("Título", "openalex-team"),
+            "type" => __("Tipo", "openalex-team"),
+            "year" => __("Año", "openalex-team"),
             "doi" => "DOI",
-            "hidden" => "Ocultar del listado",
+            "hidden" => __("Ocultar del listado", "openalex-team"),
         ];
     }
 
@@ -895,7 +897,8 @@ class OpenAlex_Publications_Table extends WP_List_Table
         if (empty($this->items)) {
             echo '<tr><td colspan="' .
                 count($this->get_columns()) .
-                '" style="text-align:center;padding:20px;"><em>No hay publicaciones que coincidan con los filtros.</em></td></tr>';
+                '" style="text-align:center;padding:20px;"><em>'.
+                esc_html__('No hay publicaciones que coincidan con los filtros.', "openalex").'</em></td></tr>';
             return;
         }
 
