@@ -81,51 +81,6 @@ export default function Edit({ attributes, setAttributes }) {
     }, [selectedMemberId, debouncedSearch]);
 
 // Buscar publicaciones cuando cambia la búsqueda
-/*
-useEffect(() => {
-    console.log('🔍 useEffect ejecutado');
-    console.log('  - selectedMemberId:', selectedMemberId);
-    console.log('  - debouncedSearch:', debouncedSearch);
-    console.log('  - debouncedSearch.length:', debouncedSearch?.length);
-    
-    if (!selectedMemberId) {
-        console.log('  ❌ No hay selectedMemberId');
-        setSearchResults([]);
-        return;
-    }
-    
-    if (!debouncedSearch) {
-        console.log('  ❌ No hay debouncedSearch');
-        setSearchResults([]);
-        return;
-    }
-    
-    if (debouncedSearch.length < 2) {
-        console.log('  ❌ debouncedSearch es muy corto (< 2 caracteres)');
-        setSearchResults([]);
-        return;
-    }
-
-    console.log('  ✅ Todas las condiciones pasadas, haciendo fetch...');
-    setIsLoading(true);
-    setError('');
-    
-    const path = `/openalex/v1/publications/${selectedMemberId}?search=${encodeURIComponent(debouncedSearch)}`;
-    console.log('  📡 Llamando a:', path);
-    
-    apiFetch({ path: path })
-        .then(results => {
-            console.log('  ✅ Respuesta recibida:', results);
-            setSearchResults(results);
-            setIsLoading(false);
-        })
-        .catch(err => {
-            console.error('  ❌ Error en fetch:', err);
-            setError('Error al buscar: ' + err.message);
-            setIsLoading(false);
-        });
-}, [selectedMemberId, debouncedSearch]);*/
-
     const addPublication = (pub) => {
         if (!selectedPublicationIds.includes(pub.pub_id)) {
             const newIds = [...selectedPublicationIds, pub.pub_id];
