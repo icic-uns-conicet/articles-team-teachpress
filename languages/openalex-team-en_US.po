@@ -45,7 +45,7 @@ msgid "La visibilidad de las publicaciones fue actualizada."
 msgstr "Publications visibility was updated."
 
 msgid "Máximo de publicaciones por miembro"
-msgstr ""
+msgstr "Maximum number of publications per member"
 
 msgid "Incluido en el User-Agent de las peticiones a OpenAlex para mejor rate-limiting."
 msgstr "Included in the User-Agent of requests to OpenAlex for improved rate limiting."
