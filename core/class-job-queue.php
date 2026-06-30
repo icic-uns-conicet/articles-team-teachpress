@@ -11,15 +11,15 @@ class OpenAlex_Job_Queue {
 
     public static function enqueue_member_sync( int $post_id ): array {
         if ( ! function_exists( 'as_enqueue_async_action' ) ) {
-            return [ 'queued' => false, 'action_id' => false, 'message' => 'Action Scheduler no está disponible.' ];
+            return [ 'queued' => false, 'action_id' => false, 'message' => __('Action Scheduler no está disponible.', "openalex-team") ];
         }
 
         if ( self::has_pending_job( $post_id ) ) {
-            return [ 'queued' => false, 'action_id' => false, 'message' => 'Este miembro ya tiene una sincronización en curso o en cola.' ];
+            return [ 'queued' => false, 'action_id' => false, 'message' => __('Este miembro ya tiene una sincronización en curso o en cola.', "openalex-team") ];
         }
 
         update_post_meta( $post_id, 'openalex_sync_status', 'queued' );
-        update_post_meta( $post_id, 'openalex_sync_message', 'En cola' );
+        update_post_meta( $post_id, 'openalex_sync_message', __('En cola', "openalex-team") );
         update_post_meta( $post_id, 'openalex_sync_started_at', '' );
         update_post_meta( $post_id, 'openalex_sync_finished_at', '' );
 
@@ -27,12 +27,12 @@ class OpenAlex_Job_Queue {
 
         if ( ! $action_id ) {
             update_post_meta( $post_id, 'openalex_sync_status', 'failed' );
-            update_post_meta( $post_id, 'openalex_sync_message', 'No se pudo encolar la tarea.' );
-            return [ 'queued' => false, 'action_id' => false, 'message' => 'No se pudo encolar la tarea.' ];
+            update_post_meta( $post_id, 'openalex_sync_message', __('No se pudo encolar la tarea.', "openalex-team") );
+            return [ 'queued' => false, 'action_id' => false, 'message' => __('No se pudo encolar la tarea.', "openalex-team") ];
         }
 
         update_post_meta( $post_id, 'openalex_sync_action_id', (int) $action_id );
-        return [ 'queued' => true, 'action_id' => (int) $action_id, 'message' => 'Sincronización encolada.' ];
+        return [ 'queued' => true, 'action_id' => (int) $action_id, 'message' => __('Sincronización encolada.', "openalex-team") ];
     }
 
     public function process_sync( $args ): void {
@@ -40,12 +40,12 @@ class OpenAlex_Job_Queue {
         if ( ! $post_id ) return;
 
         update_post_meta( $post_id, 'openalex_sync_status', 'running' );
-        update_post_meta( $post_id, 'openalex_sync_message', 'Procesando publicaciones...' );
+        update_post_meta( $post_id, 'openalex_sync_message', __('Procesando publicaciones...', "openalex-team") );
         update_post_meta( $post_id, 'openalex_sync_started_at', current_time( 'mysql' ) );
 
         try {
             if ( ! OpenAlex_Helpers::teachpress_active() ) {
-                throw new Exception( 'teachPress no está activo.' );
+                throw new Exception( __('teachPress no está activo.', "openalex-team") );
             }
 
             $result = OpenAlex_TeachPress_Import::sync_member( $post_id );
@@ -53,7 +53,7 @@ class OpenAlex_Job_Queue {
 
             update_post_meta( $post_id, 'openalex_sync_status', 'completed' );
             update_post_meta( $post_id, 'openalex_sync_message', sprintf(
-                'Completado. Nuevas: %d, actualizadas: %d, omitidas: %d',
+                esc_html__( 'Completado. Nuevas: %d, actualizadas: %d, omitidas: %d', 'openalex-team' ),
                 intval( $result['added'] ?? 0 ),
                 intval( $result['updated'] ?? 0 ),
                 intval( $result['skipped'] ?? 0 )
@@ -93,13 +93,13 @@ class OpenAlex_Job_Queue {
 
     public static function get_member_status( int $post_id ): array {
         $status  = get_post_meta( $post_id, 'openalex_sync_status', true ) ?: 'idle';
-        $message = get_post_meta( $post_id, 'openalex_sync_message', true ) ?: 'Sin actividad';
+        $message = get_post_meta( $post_id, 'openalex_sync_message', true ) ?: __( 'Sin actividad', 'openalex-team' );
         $start   = get_post_meta( $post_id, 'openalex_sync_started_at', true );
         $end     = get_post_meta( $post_id, 'openalex_sync_finished_at', true );
 
         if ( self::has_pending_job( $post_id ) && $status !== 'running' ) {
             $status = 'queued';
-            $message = 'En cola';
+            $message = __('En cola', "openalex-team");
         }
 
         return [

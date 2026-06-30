@@ -108,7 +108,7 @@ msgid "El miembro no tiene OpenAlex ID."
 msgstr "Member does not have an OpenAlex ID."
 
 #: core/class-teachpress-import.php
-msgid "Work sin ID, omitido."
+msgid "Trabajo sin ID, omitido."
 msgstr "Work without ID, skipped."
 
 #: core/class-teachpress-import.php
@@ -189,34 +189,13 @@ msgstr "Limit per member in each synchronization."
 msgid "Configuración OpenAlex Team"
 msgstr "OpenAlex Team Configuration"
 
-#: admin/class-settings.php
-msgid "Herramientas"
-msgstr "Tools"
-
-#: admin/class-settings.php
-msgid "Migrar IDs de autores"
-msgstr "Migrate Author IDs"
-
-#: admin/class-settings.php
-msgid "Migración completada."
-msgstr "Migration completed."
-
-#: admin/class-settings.php
-msgid "Publicaciones procesadas: "
-msgstr "Publications processed: "
-
-#: admin/class-settings.php
-msgid "Relaciones de autor actualizadas: "
-msgstr "Author relationships updated: "
-
-#: admin/class-settings.php
-msgid "Errores: "
-msgstr "Errors: "
+msgid "Guardar configuración"
+msgstr "Save configuration"
 
 # ─── class-admin-columns.php ─────────────────────────────────────────────────
 
 #: admin/class-admin-columns.php
-msgid "OpenAlex ID"
+msgid "ID OpenAlex"
 msgstr "OpenAlex ID"
 
 #: admin/class-admin-columns.php
@@ -240,8 +219,8 @@ msgid "Publicaciones OpenAlex"
 msgstr "OpenAlex Publications"
 
 #: admin/class-publications-page.php
-msgid "🗑️ Limpiar caché miembro"
-msgstr "🗑️ Clear member cache"
+msgid "Limpiar caché miembro"
+msgstr "Clear member cache"
 
 #: admin/class-publications-page.php
 msgid "Limpiar caché de publicaciones"
@@ -256,16 +235,16 @@ msgid "Caché de todas las publicaciones limpiada con éxito."
 msgstr "Cache for all publications cleared successfully."
 
 #: admin/class-publications-page.php
-msgid "Miembros con OpenAlex ID:"
+msgid "Miembros con ID OpenAlex:"
 msgstr "Members with OpenAlex ID:"
 
 #: admin/class-publications-page.php
-msgid "No hay miembros con OpenAlex ID. "
-msgstr "No members with OpenAlex ID. "
+msgid "No hay miembros con ID OpenAlex."
+msgstr "No members with OpenAlex ID."
 
 #: admin/class-publications-page.php
-msgid " Asignalos desde la lista de Team."
-msgstr " Assign them from the Team list."
+msgid "Asignalos desde la lista de Team"
+msgstr "Assign them from the Team list"
 
 #: admin/class-publications-page.php
 msgid "Nombre"
@@ -274,10 +253,6 @@ msgstr "Name"
 #: admin/class-publications-page.php
 msgid "Equipos"
 msgstr "Teams"
-
-#: admin/class-publications-page.php
-msgid "Última sync"
-msgstr "Last sync"
 
 #: admin/class-publications-page.php
 msgid "Estado"
@@ -296,24 +271,20 @@ msgid "Sincronizar"
 msgstr "Sync"
 
 #: admin/class-publications-page.php
-msgid "Miembro no encontrado."
-msgstr "Member not found."
+msgid "Miembro no encontrado"
+msgstr "Member not found"
 
 #: admin/class-publications-page.php
-msgid "← Volver"
-msgstr "← Back"
+msgid "Volver"
+msgstr "Back"
 
 #: admin/class-publications-page.php
-msgid "Este miembro no tiene OpenAlex ID."
-msgstr "This member does not have an OpenAlex ID."
+msgid "Este miembro no tiene ID OpenAlex"
+msgstr "This member does not have an OpenAlex ID"
 
 #: admin/class-publications-page.php
-msgid "OpenAlex ID:"
-msgstr "OpenAlex ID:"
-
-#: admin/class-publications-page.php
-msgid "Última sync:"
-msgstr "Last sync:"
+msgid "Última sincr"
+msgstr "Last sync"
 
 #: admin/class-publications-page.php
 msgid "La visibilidad de las publicaciones fue actualizada."
@@ -356,20 +327,20 @@ msgid "Guardar visibilidad"
 msgstr "Save visibility"
 
 #: admin/class-publications-page.php
-msgid "En cola..."
-msgstr "Queued..."
+msgid "Procesando"
+msgstr "Processing"
 
 #: admin/class-publications-page.php
-msgid "Procesando..."
-msgstr "Processing..."
+msgid "Re-sincronizar publicaciones"
+msgstr "Re-sync publications"
 
 #: admin/class-publications-page.php
-msgid "↻ Re-sincronizar publicaciones"
-msgstr "↻ Re-sync publications"
+msgid "Re-sincronizar"
+msgstr "Re-sync"
 
 #: admin/class-publications-page.php
-msgid "⬇ Sincronizar publicaciones"
-msgstr "⬇ Sync publications"
+msgid "Sincronizar publicaciones"
+msgstr "Sync publications"
 
 #: admin/class-publications-page.php
 msgid "Título"
@@ -402,6 +373,9 @@ msgstr "Invalid publication ID."
 #: admin/class-publications-page.php
 msgid "Sin permisos."
 msgstr "No permissions."
+
+msgid "Nonce inválido."
+msgstr "Invalid nonce."
 
 #: admin/class-publications-page.php
 msgid "Publicación ocultada."
@@ -436,19 +410,11 @@ msgid "Publicaciones seleccionadas"
 msgstr "Selected publications"
 
 #: blocks/class-blocks.php
-msgid "by"
-msgstr "by"
-
-#: blocks/class-blocks.php
-msgid "DOI:"
-msgstr "DOI:"
-
-#: blocks/class-blocks.php
-msgid "No ids provided"
+msgid "Sin IDs"
 msgstr "No ids provided"
 
 #: blocks/class-blocks.php
-msgid "No valid ids"
+msgid "Sin IDs válidos"
 msgstr "No valid ids"
 
 #: blocks/class-blocks.php

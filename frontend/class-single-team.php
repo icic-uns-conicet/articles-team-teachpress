@@ -94,7 +94,7 @@ class OpenAlex_Single_Team
     {
         $by_year = [];
         foreach ($pubs as $pub) {
-            $by_year[$pub->year ?: 'Sin año'][] = $pub;
+            $by_year[$pub->year ?: __('Sin año', "openalex-team")][] = $pub;
         }
         krsort($by_year);
 
@@ -103,8 +103,7 @@ class OpenAlex_Single_Team
 
         ob_start(); ?>
         <div class="openalex-publications">
-            <h3 class="openalex-publications__title">
-                Publicaciones
+            <h3 class="openalex-publications__title"><?php echo esc_html__('Publicaciones', 'openalex-team'); ?>
                 <span class="openalex-publications__count">(<?php echo count($pubs); ?>)</span>
             </h3>
             <?php foreach ($by_year as $year => $year_pubs): ?>

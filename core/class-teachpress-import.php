@@ -32,7 +32,7 @@ class OpenAlex_TeachPress_Import
 
         $openalex_id = get_post_meta($post_id, 'openalex_id', true);
         if (! $openalex_id) {
-            $result['errors'][] = 'El miembro no tiene OpenAlex ID.';
+            $result['errors'][] = __('El miembro no tiene OpenAlex ID.', 'openalex-team');
             return $result;
         }
 
@@ -65,7 +65,7 @@ class OpenAlex_TeachPress_Import
         $pub_table  = $wpdb->prefix . 'teachpress_pub';
 
         $openalex_work_id = basename($work['id'] ?? '');
-        if (! $openalex_work_id) return 'Work sin ID, omitido.';
+        if (! $openalex_work_id) return __('Trabajo sin ID, omitido.', 'openalex-team');
 
         // ── Deduplicación 1: por openalex_work_id ────────────────────────────
         $existing = $wpdb->get_var($wpdb->prepare(
@@ -120,7 +120,7 @@ class OpenAlex_TeachPress_Import
         $data = [
             'type'      => OpenAlex_Helpers::map_pub_type($work['type'] ?? ''),
             'bibtex'    => OpenAlex_Helpers::generate_bibtex_key($author_str, $year, $work['title'] ?? ''),
-            'title'     => $work['title'] ?? '[Sin título]',
+            'title'     => $work['title'] ?? __('[Sin título]', 'openalex-team'),
             'author'    => $author_str,
             'doi'       => $doi,
             'url'       => $work['primary_location']['landing_page_url'] ?? '',
@@ -136,7 +136,7 @@ class OpenAlex_TeachPress_Import
 
         // ── Insertar en teachPress ────────────────────────────────────────────
         $pub_id = TP_Publications::add_publication($data, '');
-        if (! $pub_id) return "Error al guardar '{$data['title']}' en teachPress.";
+        if (! $pub_id) return __("Error al guardar '{$data['title']}' en teachPress.", 'openalex-team');
 
         // ── Metadatos de trazabilidad ────────────────────────────────────────
         TP_Publications::add_pub_meta($pub_id, 'openalex_work_id',   $openalex_work_id);

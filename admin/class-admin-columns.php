@@ -39,7 +39,7 @@ class OpenAlex_Admin_Columns {
         foreach ( $columns as $key => $label ) {
             $new[ $key ] = $label;
             if ( $key === 'title' ) {
-                $new['openalex_id']        = __('OpenAlex ID', "openalex-team");
+                $new['openalex_id']        = __('ID OpenAlex', "openalex-team");
                 $new['openalex_last_sync'] = __('Última sincr.', "openalex-team");
             }
         }
@@ -117,7 +117,7 @@ class OpenAlex_Admin_Columns {
         <fieldset class="inline-edit-col-left">
             <div class="inline-edit-col">
                 <label>
-                    <span class="title"><?php esc_html_e( 'OpenAlex ID', 'openalex-team' ); ?></span>
+                    <span class="title"><?php esc_html_e( 'ID OpenAlex', 'openalex-team' ); ?></span>
                     <span class="input-text-wrap">
                         <input type="text" name="openalex_id" class="ptitle" value="" placeholder="Ej: A123456789">
                     </span>

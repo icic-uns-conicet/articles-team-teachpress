@@ -40,14 +40,14 @@ class OpenAlex_Helpers
     public static function get_type_label(string $type): string
     {
         $labels = [
-            'article'       => 'Artículo',
-            'inbook'        => 'Capítulo',
-            'book'          => 'Libro',
-            'inproceedings' => 'Conferencia',
-            'phdthesis'     => 'Tesis',
-            'techreport'    => 'Informe',
-            'unpublished'   => 'Preprint',
-            'misc'          => 'Misc',
+            'article'       => __('Artículo', 'openalex-team'),
+            'inbook'        => __('Capítulo', 'openalex-team'),
+            'book'          => __('Libro', 'openalex-team'),
+            'inproceedings' => __('Conferencia', 'openalex-team'),
+            'phdthesis'     => __('Tesis', 'openalex-team'),
+            'techreport'    => __('Informe', 'openalex-team'),
+            'unpublished'   => __('Preprint', 'openalex-team'),
+            'misc'          => __('Misc', 'openalex-team'),
         ];
         return $labels[$type] ?? ucfirst($type);
     }

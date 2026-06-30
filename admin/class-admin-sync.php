@@ -33,7 +33,7 @@ class OpenAlex_Admin_Sync {
             'errors'      => $queue['queued'] ? [] : [ $queue['message'] ],
             'notice'      => $queue['queued']
                 ? sprintf(
-                    'La sincronización del miembro %s fue encolada.',
+                    __('La sincronización del miembro %s fue encolada.', "openalex-team"),
                     get_the_title( $post_id )
                 )
                 : $queue['message'],

@@ -44,13 +44,13 @@ class OpenAlex_API
             ]);
 
             if (is_wp_error($response)) {
-                $errors[] = 'Error de conexión: ' . $response->get_error_message();
+                $errors[] = __('Error de conexión: ', "openalex-team") . $response->get_error_message();
                 break;
             }
 
             $code = wp_remote_retrieve_response_code($response);
             if ($code < 200 || $code >= 300) {
-                $errors[] = 'OpenAlex devolvió HTTP ' . $code . ': ' . wp_remote_retrieve_body($response);
+                $errors[] = __('OpenAlex devolvió HTTP ', "openalex-team") . $code . ': ' . wp_remote_retrieve_body($response);
                 OpenAlex_Helpers::log("Error fetching works for author_id {$author_id}. HTTP code: {$code}. Response: " . wp_remote_retrieve_body($response));
                 break;
             }

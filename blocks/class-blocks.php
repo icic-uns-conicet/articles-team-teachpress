@@ -117,7 +117,7 @@ class OpenAlex_Blocks {
         $search = $request->get_param('search');
 
         if (!$member_id) {
-            return new WP_Error('invalid_member', 'ID de miembro inválido', ['status' => 400]);
+            return new WP_Error('invalid_member', __('ID de miembro inválido', "openalex-team"), ['status' => 400]);
         }
 
         // Obtener todas las publicaciones del miembro
@@ -204,7 +204,7 @@ class OpenAlex_Blocks {
     public function clear_publications_cache(WP_REST_Request $request): WP_REST_Response {
         $ids_param = $request->get_param('ids');
         if (empty($ids_param)) {
-            return new WP_REST_Response(['ok' => false, 'message' => 'No ids provided'], 400);
+            return new WP_REST_Response(['ok' => false, 'message' => __('Sin IDs', "openalex-team")], 400);
         }
 
         if (is_string($ids_param)) {
@@ -214,7 +214,7 @@ class OpenAlex_Blocks {
         }
         $ids = array_filter($ids);
         if (empty($ids)) {
-            return new WP_REST_Response(['ok' => false, 'message' => 'No valid ids'], 400);
+            return new WP_REST_Response(['ok' => false, 'message' => __('Sin IDs válidos', "openalex-team")], 400);
         }
 
         sort($ids, SORT_NUMERIC);
