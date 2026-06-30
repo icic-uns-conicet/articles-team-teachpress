@@ -81,7 +81,7 @@ Plugin de WordPress que integra el Custom Post Type `team` (de [TLP Team](https:
 
 ```bash
 cd wp-content/plugins/
-git clone https://github.com/icic-uns-conicet/articles-scraper.git openalex-team-publications
+git clone https://github.com/icic-uns-conicet/articles-team-teachpress.git openalex-team-publications
 ```
 
 O descarga el ZIP y descomprímelo en `wp-content/plugins/openalex-team-publications/`
@@ -556,7 +556,7 @@ ICIC-UNS-CONICET
 ## 📞 Soporte
 
 Para reportar problemas o solicitar características:
-- [GitHub Issues](https://github.com/icic-uns-conicet/articles-scraper/issues)
+- [GitHub Issues](https://github.com/icic-uns-conicet/articles-team-teachpress/issues)
 
 ---
 

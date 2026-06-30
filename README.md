@@ -563,7 +563,7 @@ ICIC-UNS-CONICET
 ## 📞 Support
 
 To report issues or request features:
-- GitHub Issues
+- [GitHub Issues](https://github.com/icic-uns-conicet/articles-team-teachpress/issues)
 
 ---
 
