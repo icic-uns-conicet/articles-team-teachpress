@@ -1,236 +1,244 @@
 # OpenAlex Team Publications
 
-Plugin de WordPress que integra el Custom Post Type `team` (de [TLP Team](https://wordpress.org/plugins/tlp-team/)) con la API de [OpenAlex](https://openalex.org/) para importar y gestionar automáticamente las publicaciones académicas de los miembros de un equipo de investigación, almacenándolas en [teachPress](https://wordpress.org/plugins/teachpress/).
+[![WordPress Plugin](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
+[![PHP](https://img.shields.io/badge/PHP-7.4%2B-8892BF.svg)](https://php.net/)
+[![License](https://img.shields.io/badge/License-GPLv2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 
-## 📋 Tabla de Contenidos
+A WordPress plugin that integrates the `team` Custom Post Type (from TLP Team) with the OpenAlex API to automatically import and manage academic publications for research team members, storing them in teachPress.
 
-- [Características](#-características)
-- [Requisitos](#-requisitos)
-- [Instalación](#-instalación)
-- [Configuración](#-configuración)
-- [Uso](#-uso)
-- [Arquitectura](#-arquitectura)
-- [API de OpenAlex](#-api-de-openalex)
-- [Sincronización](#-sincronización)
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Requirements](#-requirements)
+- [Installation](#-installation)
+- [Configuration](#-configuration)
+- [Usage](#-usage)
+- [Architecture](#-architecture)
+- [OpenAlex API](#-openalex-api)
+- [Synchronization](#-synchronization)
 - [Frontend](#-frontend)
-- [Herramientas de Migración](#-herramientas-de-migración)
-- [Solución de Problemas](#-solución-de-problemas)
-- [Licencia](#-licencia)
+- [Migration Tools](#-migration-tools)
+- [Troubleshooting](#-troubleshooting)
+- [Security](#-security)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-## ✨ Características
+## ✨ Features
 
-### 🔍 Importación Inteligente
-- **Deduplicación automática** por OpenAlex Work ID y DOI
-- **Mapeo completo de metadatos**: título, autores, DOI, journal, volumen, número, páginas, abstract, año
-- **Reconstrucción de abstracts** desde el índice invertido de OpenAlex
-- **Generación automática de claves BibTeX**
+### 🔍 Smart Import
+- **Automatic deduplication** by OpenAlex Work ID and DOI
+- **Complete metadata mapping**: title, authors, DOI, journal, volume, issue, pages, abstract, year
+- **Abstract reconstruction** from OpenAlex's inverted index
+- **Automatic BibTeX key generation**
 
-### 👥 Gestión de Autores
-- **Relaciones autor-publicación** individuales en teachPress
-- **Enlaces inteligentes**: Los miembros del equipo aparecen enlazados a sus perfiles en las listas de autores
-- **Deduplicación de autores** reutilizando entradas existentes en teachPress
-- **Soporte para múltiples autores** con formato estándar (Apellido, Iniciales)
+### 👥 Author Management
+- **Individual author-publication relationships** in teachPress
+- **Smart linking**: Team members appear linked to their profiles in author lists
+- **Author deduplication** reusing existing teachPress entries
+- **Multiple author support** with standard formatting (Lastname, Initials)
 
-### ⚡ Procesamiento en Background
-- **Cola de trabajos asíncrona** usando Action Scheduler
-- **Sincronización sin bloquear** la interfaz de administración
-- **Estado de sincronización** en tiempo real por miembro
-- **Prevención de trabajos duplicados**
+### ⚡ Background Processing
+- **Asynchronous job queue** using Action Scheduler
+- **Non-blocking synchronization** of the admin interface
+- **Real-time sync status** per member
+- **Duplicate job prevention**
 
-### 🎨 Frontend Integrado
-- **Inyección automática** de publicaciones en páginas `single-team.php`
-- **Agrupación por año** con diseño responsive
-- **Estilos personalizables** con CSS inline
-- **Enlaces a DOI** y URLs de publicaciones
-- **Tipos de publicación** con badges de colores (artículo, libro, conferencia, tesis, etc.)
+### 🎨 Integrated Frontend
+- **Automatic injection** of publications on `single-team.php` pages
+- **Year grouping** with responsive design
+- **Customizable styles** with inline CSS
+- **DOI and publication URL links**
+- **Publication type badges** with colors (article, book, conference, thesis, etc.)
 
-### 🛠️ Administración
-- **Configuración centralizada** de API key y email
-- **Sincronización automática** con intervalos configurables (manual, cada hora, diario, semanal)
-- **Columnas personalizadas** en el listado de miembros del equipo
-- **Quick Edit** para OpenAlex ID
-- **Filtros por estado de sincronización**
-- **Ocultar/mostrar publicaciones** individuales
-- **Herramienta de migración** de IDs de autores
+### 🛠️ Administration
+- **Centralized settings** for API key and email
+- **Automatic sync** with configurable intervals (manual, hourly, daily, weekly)
+- **Custom columns** in team member listing
+- **Quick Edit** for OpenAlex ID
+- **Sync status filters**
+- **Hide/show individual publications**
+- **Author ID migration tool**
 
-### 🚀 Optimización
-- **Sistema de caché** con transients de WordPress (12 horas)
-- **Consultas optimizadas** con índices apropiados
-- **Rate limiting** respetuoso con la API de OpenAlex
-- **Paginación automática** para autores con muchas publicaciones
+### 🚀 Optimization
+- **Caching system** using WordPress transients (12 hours)
+- **Optimized queries** with proper indexes
+- **Respectful rate limiting** for the OpenAlex API
+- **Automatic pagination** for authors with many publications
 
-## 📦 Requisitos
+## 📦 Requirements
 
-- **WordPress** 5.0 o superior
-- **PHP** 7.4 o superior
-- **Plugin teachPress** activo (para gestión de publicaciones)
-- **Plugin TLP Team** activo (para el Custom Post Type `team`)
-- **Action Scheduler** (incluido en `vendor/action-scheduler/`)
+- **WordPress** 5.0 or higher
+- **PHP** 7.4 or higher
+- **teachPress** plugin active (for publication management)
+- **TLP Team** plugin active (for the `team` Custom Post Type)
+- **Action Scheduler** (included in `vendor/action-scheduler/`)
 
-## 🔧 Instalación
+## 🔧 Installation
 
-### 1. Clonar o Descargar el Repositorio
+### 1. Clone or Download the Repository
 
 ```bash
 cd wp-content/plugins/
-git clone https://github.com/icic-uns-conicet/articles-scraper.git openalex-team-publications
+git clone https://github.com/icic-uns-conicet/articles-team-teachpress.git openalex-team-publications
 ```
 
-O descarga el ZIP y descomprímelo en `wp-content/plugins/openalex-team-publications/`
+Or download the ZIP and extract it to `wp-content/plugins/openalex-team-publications/`
 
-### 2. Activar el Plugin
+### 2. Activate the Plugin
 
-1. Ve a **Plugins** en el panel de WordPress
-2. Busca **OpenAlex Team Publications**
-3. Haz clic en **Activar**
+1. Go to **Plugins** in the WordPress admin panel
+2. Find **OpenAlex Team Publications**
+3. Click **Activate**
 
-### 3. Verificar Dependencias
+### 3. Verify Dependencies
 
-Asegúrate de que los siguientes plugins estén activos:
+Make sure the following plugins are active:
 - ✅ teachPress
 - ✅ TLP Team
 
-## ⚙️ Configuración
+## ⚙️ Configuration
 
-### Página de Configuración
+### Settings Page
 
-Ve a **Team → Configuración OpenAlex** en el menú de administración.
+Go to **Team → OpenAlex Configuration** in the admin menu.
 
-#### API de OpenAlex
+#### OpenAlex API
 
-| Campo | Descripción | Obligatorio |
-|-------|-------------|-------------|
-| **API Key** | Clave de API de OpenAlex para autenticación y mayor rate limit. Obtén una en [openalex.org](https://openalex.org/) | Opcional |
-| **Email para User-Agent** | Email incluido en el User-Agent para mejor rate-limiting y cumplimiento de políticas | Recomendado |
+| Field | Description | Required |
+|-------|-------------|----------|
+| **API Key** | OpenAlex API key for authentication and higher rate limit. Get one at openalex.org | Optional |
+| **Email for User-Agent** | Email included in the User-Agent for better rate-limiting and policy compliance | Recommended |
 
 #### General
 
-| Campo | Descripción | Valores |
-|-------|-------------|---------|
-| **Sincronización automática** | Frecuencia de sincronización automática | Manual, Cada hora, Dos veces al día, Diario, Semanal |
-| **Máximo de publicaciones por miembro** | Límite de publicaciones a importar por miembro en cada sincronización | 10 - 1000 (predeterminado: 200) |
+| Field | Description | Values |
+|-------|-------------|--------|
+| **Automatic Synchronization** | Frequency of automatic sync | Manual, Hourly, Twice Daily, Daily, Weekly |
+| **Max publications per member** | Limit of publications to import per member per sync | 10 - 1000 (default: 200) |
 
-### Configurar OpenAlex ID para Miembros
+### Configure OpenAlex ID for Members
 
-1. Ve a **Team → Todos los miembros**
-2. Edita un miembro
-3. En el campo **OpenAlex ID**, ingresa el ID del autor en OpenAlex
-   - Ejemplo: `https://openalex.org/A1234567890` o simplemente `A1234567890`
-4. Guarda los cambios
+1. Go to **Team → All Members**
+2. Edit a member
+3. In the **OpenAlex ID** field, enter the author's ID from OpenAlex
+   - Example: `https://openalex.org/A1234567890` or simply `A1234567890`
+   - Multiple IDs can be separated by `|` (pipe)
+4. Save changes
 
-**¿Cómo encontrar el OpenAlex ID?**
-- Busca al autor en [openalex.org](https://openalex.org/)
-- Copia la URL del perfil del autor
-- El ID es la última parte de la URL (ej: `A1234567890`)
+**How to find the OpenAlex ID?**
+- Search for the author at openalex.org
+- Copy the author profile URL
+- The ID is the last part of the URL (e.g., `A1234567890`)
 
-## 📖 Uso
+## 📖 Usage
 
-### Sincronización Manual
+### Manual Synchronization
 
-#### Desde el Listado de Miembros
+#### From the Member List
+1. Go to **Team → All Members**
+2. Hover over a member
+3. Click **Sync with OpenAlex** in the quick actions
+4. The job will be queued and processed in the background
 
-1. Ve a **Team → Todos los miembros**
-2. Pasa el cursor sobre un miembro
-3. Haz clic en **Sincronizar con OpenAlex** en las acciones rápidas
-4. El trabajo se encolará y procesará en background
+#### Bulk Synchronization
+1. Select multiple members using checkboxes
+2. In the **Bulk Actions** dropdown, select **Sync with OpenAlex**
+3. Click **Apply**
 
-#### Sincronización Masiva
+### View Sync Status
 
-1. Selecciona múltiples miembros usando los checkboxes
-2. En el menú desplegable **Acciones en lote**, selecciona **Sincronizar con OpenAlex**
-3. Haz clic en **Aplicar**
+In the member list, the following columns show status:
+- **OpenAlex Status**: idle, queued, processing, completed, error
+- **Last sync**: Date and time of the last successful sync
+- **Publications**: Total number of imported publications
 
-### Ver Estado de Sincronización
+### Manage Publications
 
-En el listado de miembros, las siguientes columnas muestran el estado:
+#### Hide/Show Publications
+1. Go to **Team → Publications**
+2. Hover over a publication
+3. Click **Hide** or **Show** in quick actions
 
-- **Estado OpenAlex**: idle, en cola, procesando, completado, error
-- **Última sincronización**: Fecha y hora de la última sincronización exitosa
-- **Publicaciones**: Número total de publicaciones importadas
+Hidden publications won't appear on the frontend but remain in the database.
 
-### Gestionar Publicaciones
-
-#### Ocultar/Mostrar Publicaciones
-
-1. Ve a **Team → Publicaciones**
-2. Pasa el cursor sobre una publicación
-3. Haz clic en **Ocultar** o **Mostrar** en las acciones rápidas
-
-Las publicaciones ocultas no aparecerán en el frontend pero seguirán en la base de datos.
-
-#### Ver Publicaciones de un Miembro
-
-1. Ve a **Team → Publicaciones**
-2. Usa el filtro **Miembro del equipo** para ver solo las publicaciones de un miembro específico
+#### View a Member's Publications
+1. Go to **Team → Publications**
+2. Use the **Team member** filter to see only publications from a specific member
 
 ### Frontend
 
-Las publicaciones se muestran automáticamente en las páginas individuales de cada miembro (`single-team.php`).
+Publications are automatically displayed on each member's individual page (`single-team.php`).
 
-**Características del frontend:**
-- ✅ Agrupación por año (más reciente primero)
-- ✅ Badges de colores por tipo de publicación
-- ✅ Enlaces a DOI cuando están disponibles
-- ✅ Autores con enlaces a perfiles de miembros del equipo
-- ✅ Diseño responsive
-- ✅ Caché de 12 horas para optimizar rendimiento
+**Frontend features:**
+- ✅ Year grouping (most recent first)
+- ✅ Color badges by publication type
+- ✅ DOI links when available
+- ✅ Authors linked to team member profiles
+- ✅ Responsive design
+- ✅ 12-hour cache for performance optimization
 
-## 🏗️ Arquitectura
+## 🏗️ Architecture
 
 ```
 openalex-team-publications/
 │
-├── team-teachpress-integration.php    # Archivo principal del plugin
+├── team-teachpress-integration.php    # Main plugin file
 │
 ├── includes/
-│   └── class-helpers.php              # Utilidades compartidas (formato, mapeo, DB, caché)
+│   └── class-helpers.php              # Shared utilities (formatting, mapping, DB, cache)
 │
 ├── core/
-│   ├── class-openalex-api.php         # Comunicación con api.openalex.org
-│   ├── class-teachpress-import.php    # Deduplicación + inserción en teachPress
-│   └── class-job-queue.php            # Cola de trabajos en background (Action Scheduler)
+│   ├── class-openalex-api.php         # Communication with api.openalex.org
+│   ├── class-teachpress-import.php    # Deduplication + insertion into teachPress
+│   └── class-job-queue.php            # Background job queue (Action Scheduler)
 │
 ├── admin/
-│   ├── class-settings.php             # Página de configuración
-│   ├── class-admin-columns.php        # Columnas personalizadas, Quick Edit, filtros
-│   ├── class-admin-sync.php           # Handler de sincronización (admin-post)
-│   └── class-publications-page.php    # Submenú y vistas de administración
+│   ├── class-settings.php             # Settings page
+│   ├── class-admin-columns.php        # Custom columns, Quick Edit, filters
+│   ├── class-admin-sync.php           # Sync handler (admin-post)
+│   └── class-publications-page.php    # Submenu and admin views
 │
 ├── frontend/
-│   └── class-single-team.php          # Inyección en single-team.php (tlp-team)
+│   └── class-single-team.php          # Injection on single-team.php (tlp-team)
+│
+├── blocks/
+│   └── class-blocks.php               # Gutenberg blocks and REST API endpoints
+│
+├── languages/
+│   └── openalex-team-en_US.po         # Translation file
 │
 └── vendor/
-    └── action-scheduler/              # Dependencia: Action Scheduler
+    └── action-scheduler/              # Dependency: Action Scheduler
 ```
 
-### Flujo de Sincronización
+### Synchronization Flow
 
 ```
-1. Usuario inicia sincronización (manual o automática)
+1. User triggers sync (manual or automatic)
    ↓
-2. OpenAlex_Job_Queue::enqueue_member_sync() encola el trabajo
+2. OpenAlex_Job_Queue::enqueue_member_sync() queues the job
    ↓
-3. Action Scheduler ejecuta OpenAlex_Job_Queue::process_sync() en background
+3. Action Scheduler executes OpenAlex_Job_Queue::process_sync() in background
    ↓
-4. OpenAlex_API::fetch_works() obtiene publicaciones de OpenAlex (paginación automática)
+4. OpenAlex_API::fetch_works() fetches publications from OpenAlex (auto-pagination)
    ↓
-5. OpenAlex_TeachPress_Import::sync_member() procesa cada publicación:
-   - Verifica duplicados por OpenAlex Work ID
-   - Verifica duplicados por DOI
-   - Mapea campos de OpenAlex a teachPress
-   - Inserta/actualiza en teachPress
-   - Guarda relaciones autor-publicación
+5. OpenAlex_TeachPress_Import::sync_member() processes each publication:
+   - Checks duplicates by OpenAlex Work ID
+   - Checks duplicates by DOI
+   - Maps OpenAlex fields to teachPress
+   - Inserts/updates in teachPress
+   - Saves author-publication relationships
    ↓
-6. Se actualiza el estado de sincronización del miembro
+6. Member sync status is updated
    ↓
-7. Se limpia la caché de publicaciones del miembro
+7. Member publication cache is cleared
 ```
 
-## 🌐 API de OpenAlex
+## 🌐 OpenAlex API
 
-### Endpoints Utilizados
+### Endpoints Used
 
-El plugin utiliza el endpoint `/works` de la API de OpenAlex:
+The plugin uses the `/works` endpoint from the OpenAlex API:
 
 ```
 GET https://api.openalex.org/works
@@ -240,81 +248,80 @@ GET https://api.openalex.org/works
   &select=id,title,type,publication_year,doi,authorships,biblio,primary_location,abstract_inverted_index
 ```
 
-### Autenticación
+### Authentication
 
-- **API Key**: Opcional pero recomendada para mayor rate limit
-- **User-Agent**: Incluye email para mejor rate-limiting
+- **API Key**: Optional but recommended for higher rate limits
+- **User-Agent**: Includes email for better rate limiting
 - **Rate Limit**:
-  - Sin API key: 100,000 requests/día
-  - Con API key: 100,000 requests/día + prioridad
+  - Without API key: 100,000 requests/day
+  - With API key: 100,000 requests/day + priority
 
-### Paginación
+### Pagination
 
-El plugin usa **cursor-based pagination** para manejar autores con muchas publicaciones:
-- Máximo 10 páginas por sincronización
-- 200 publicaciones por página
-- Total máximo: 2,000 publicaciones por miembro (configurable)
+The plugin uses **cursor-based pagination** to handle authors with many publications:
+- Maximum 10 pages per sync
+- 200 publications per page
+- Total maximum: 2,000 publications per member (configurable)
 
-## 🔄 Sincronización
+## 🔄 Synchronization
 
-### Sincronización Automática
+### Automatic Synchronization
 
-Configurable en **Team → Configuración OpenAlex**:
+Configurable in **Team → OpenAlex Configuration**:
 
-| Intervalo | Descripción |
-|-----------|-------------|
-| **Manual** | Solo sincronización manual |
-| **Cada hora** | `wp_schedule_event()` con recurrencia `hourly` |
-| **Dos veces al día** | Recurrencia `twicedaily` |
-| **Diario** | Recurrencia `daily` (predeterminado) |
-| **Semanal** | Recurrencia `weekly` |
+| Interval | Description |
+|----------|-------------|
+| **Manual** | Manual sync only |
+| **Hourly** | `wp_schedule_event()` with `hourly` recurrence |
+| **Twice Daily** | `twicedaily` recurrence |
+| **Daily** | `daily` recurrence (default) |
+| **Weekly** | `weekly` recurrence |
 
-### Sincronización Manual
+### Manual Synchronization
 
-#### Desde la Interfaz
+#### From the Interface
+1. **Quick action**: Hover over a member → **Sync with OpenAlex**
+2. **Bulk action**: Select members → **Bulk Actions** → **Sync with OpenAlex** → **Apply**
 
-1. **Acción rápida**: Pasa el cursor sobre un miembro → **Sincronizar con OpenAlex**
-2. **Acción masiva**: Selecciona miembros → **Acciones en lote** → **Sincronizar con OpenAlex** → **Aplicar**
-
-#### Programáticamente
+#### Programmatically
 
 ```php
-// Sincronizar un miembro específico
+// Sync a specific member
 $result = OpenAlex_Job_Queue::enqueue_member_sync($post_id);
 
-// Verificar estado
+// Check status
 $status = OpenAlex_Job_Queue::get_member_status($post_id);
 ```
 
-### Deduplicación
+### Deduplication
 
-El plugin implementa un sistema de deduplicación en dos niveles:
+The plugin implements a two-level deduplication system:
 
-1. **Por OpenAlex Work ID**: Busca en `teachpress_pub_meta` si ya existe una publicación con ese ID
-2. **Por DOI**: Si no hay Work ID, busca por DOI en `teachpress_pub`
+1. **By OpenAlex Work ID**: Searches in `teachpress_pub_meta` if a publication with that ID already exists
+2. **By DOI**: If no Work ID, searches by DOI in `teachpress_pub`
 
-Si se encuentra un duplicado:
-- Se actualiza el `openalex_work_id` si es necesario
-- Se asegura la relación miembro-publicación
-- Se omite la creación de una nueva publicación
+If a duplicate is found:
+- Updates the `openalex_work_id` if necessary
+- Ensures the member-publication relationship
+- Skips creating a new publication
 
-### Estados de Sincronización
+### Sync States
 
-| Estado | Descripción |
-|--------|-------------|
-| `idle` | Sin actividad |
-| `queued` | En cola, esperando procesamiento |
-| `running` | Procesando publicaciones |
-| `completed` | Sincronización completada exitosamente |
-| `failed` | Error durante la sincronización |
+| State | Description |
+|-------|-------------|
+| `idle` | No activity |
+| `queued` | Queued, awaiting processing |
+| `running` | Processing publications |
+| `completed` | Sync completed successfully |
+| `failed` | Error during sync |
 
 ## 🎨 Frontend
 
-### Inyección Automática
+### Automatic Injection
 
-El plugin detecta automáticamente cuando se carga una página `single-team.php` e inyecta el bloque de publicaciones usando JavaScript al final del contenedor principal.
+The plugin automatically detects when a `single-team.php` page is loaded and injects the publications block using JavaScript at the end of the main container.
 
-**Selectores de contenedor (en orden de prioridad):**
+**Container selectors (in priority order):**
 1. `.tlp-single-container`
 2. `.tlp-single-detail`
 3. `article.type-team`
@@ -322,21 +329,21 @@ El plugin detecta automáticamente cuando se carga una página `single-team.php`
 5. `#content`
 6. `.site-content`
 
-### Estructura HTML
+### HTML Structure
 
 ```html
 <div class="openalex-publications">
   <h3 class="openalex-publications__title">
-    Publicaciones <span class="openalex-publications__count">(42)</span>
+    Publications <span class="openalex-publications__count">(42)</span>
   </h3>
 
   <div class="openalex-publications__year-group">
     <h4 class="openalex-publications__year">2024</h4>
     <ul class="openalex-publications__list">
       <li class="openalex-publications__item">
-        <span class="openalex-pub-type openalex-pub-type--article">Artículo</span>
+        <span class="openalex-pub-type openalex-pub-type--article">Article</span>
         <span class="openalex-pub-title">
-          <a href="https://doi.org/10.1234/example">Título de la publicación</a>
+          <a href="https://doi.org/10.1234/example">Publication Title</a>
         </span>
         <span class="openalex-pub-authors">
           <a href="/team/juan-perez">Perez J.P.</a>, Garcia M., et al.
@@ -349,208 +356,212 @@ El plugin detecta automáticamente cuando se carga una página `single-team.php`
 </div>
 ```
 
-### Personalización de Estilos
+### Style Customization
 
-Los estilos se inyectan inline y pueden sobrescribirse en tu tema:
+Styles are injected inline and can be overridden in your theme:
 
 ```css
-/* Ejemplo: Cambiar colores de badges */
+/* Example: Change badge colors */
 .openalex-pub-type--article {
   background: #custom-color;
   color: #custom-text;
 }
 
-/* Ejemplo: Ajustar espaciado */
+/* Example: Adjust spacing */
 .openalex-publications__item {
   padding: 1em 0;
 }
 ```
 
-### Tipos de Publicación
+### Publication Types
 
-| Tipo OpenAlex | Tipo teachPress | Badge | Color |
+| OpenAlex Type | teachPress Type | Badge | Color |
 |---------------|-----------------|-------|-------|
-| `article`, `journal-article` | `article` | Artículo | Verde |
-| `book-chapter` | `inbook` | Capítulo | Rosa |
-| `book`, `edited-book` | `book` | Libro | Rosa oscuro |
-| `proceedings-article`, `conference-paper` | `inproceedings` | Conferencia | Naranja |
-| `dissertation`, `thesis` | `phdthesis` | Tesis | Púrpura |
-| `preprint` | `unpublished` | Preprint | Gris |
-| `report` | `techreport` | Informe | Azul |
-| Otros | `misc` | Misc | Gris |
+| `article`, `journal-article` | `article` | Article | Green |
+| `book-chapter` | `inbook` | Chapter | Pink |
+| `book`, `edited-book` | `book` | Book | Dark Pink |
+| `proceedings-article`, `conference-paper` | `inproceedings` | Conference | Orange |
+| `dissertation`, `thesis` | `phdthesis` | Thesis | Purple |
+| `preprint` | `unpublished` | Preprint | Gray |
+| `report` | `techreport` | Report | Blue |
+| Others | `misc` | Misc | Gray |
 
-## 🔧 Herramientas de Migración
+## 🔧 Migration Tools
 
-### Migrar IDs de Autores
+### Migrate Author IDs
 
-**Ubicación**: Team → Configuración OpenAlex → Herramientas
+**Location**: Team → OpenAlex Configuration → Tools
 
-**Propósito**: Recorre las publicaciones ya importadas y guarda el `openalex_author_id` de cada autoría individual.
+**Purpose**: Iterates through already imported publications and saves the `openalex_author_id` of each individual authorship.
 
-**¿Cuándo usar?**
-- Después de actualizar el plugin a una versión que soporte enlaces por ID
-- Cuando hay dos miembros del equipo con el mismo apellido y los enlaces no funcionan correctamente
-- Para mejorar la precisión de los enlaces en listas de autores
+**When to use?**
+- After updating the plugin to a version that supports linking by ID
+- When there are two team members with the same last name and links don't work correctly
+- To improve link accuracy in author lists
 
-**Seguridad**:
-- ✅ Seguro ejecutar múltiples veces
-- ✅ Solo afecta publicaciones que aún no tienen el dato
-- ✅ No modifica datos existentes
+**Safety**:
+- ✅ Safe to run multiple times
+- ✅ Only affects publications that don't have this data yet
+- ✅ Does not modify existing data
 
-**Resultado**:
-- Publicaciones procesadas
-- Relaciones de autor actualizadas
-- Errores (si los hay)
+**Result**:
+- Publications processed
+- Author relationships updated
+- Errors (if any)
 
-## 🐛 Solución de Problemas
+## 🐛 Troubleshooting
 
-### El plugin no activa
+### Plugin won't activate
 
-**Problema**: Error al activar el plugin
+**Problem**: Error when activating the plugin
 
-**Solución**:
-1. Verifica que teachPress esté activo
-2. Verifica que TLP Team esté activo
-3. Revisa los logs de error de PHP
-4. Asegúrate de tener PHP 7.4 o superior
+**Solution**:
+1. Verify teachPress is active
+2. Verify TLP Team is active
+3. Check PHP error logs
+4. Ensure you have PHP 7.4 or higher
 
-### Las publicaciones no se importan
+### Publications aren't imported
 
-**Problema**: Al sincronizar, no se importan publicaciones
+**Problem**: When syncing, no publications are imported
 
-**Posibles causas**:
-1. **OpenAlex ID incorrecto**: Verifica que el ID sea válido en [openalex.org](https://openalex.org/)
-2. **Sin publicaciones**: El autor no tiene publicaciones indexadas en OpenAlex
-3. **Error de API**: Revisa los logs en `wp-content/debug.log` (si `WP_DEBUG_LOG` está activo)
+**Possible causes**:
+1. **Incorrect OpenAlex ID**: Verify the ID is valid at openalex.org
+2. **No publications**: The author has no publications indexed in OpenAlex
+3. **API error**: Check logs in `wp-content/debug.log` (if `WP_DEBUG_LOG` is active)
 
-**Solución**:
+**Solution**:
+
 ```php
-// Activar logging en wp-config.php
+// Enable logging in wp-config.php
 define('WP_DEBUG', true);
 define('WP_DEBUG_LOG', true);
 define('WP_DEBUG_DISPLAY', false);
 ```
 
-### Los enlaces de autores no funcionan
+### Author links don't work
 
-**Problema**: Los miembros del equipo no aparecen enlazados en las listas de autores
+**Problem**: Team members don't appear linked in author lists
 
-**Solución**:
-1. Ejecuta la **Migración de IDs de autores** en Team → Configuración OpenAlex → Herramientas
-2. Verifica que todos los miembros tengan su OpenAlex ID configurado
-3. Limpia la caché de transients:
-   ```php
-   // Ejecutar una vez en functions.php o WP-CLI
-   wp transient delete --all
-   ```
+**Solution**:
+1. Run **Author ID Migration** at Team → OpenAlex Configuration → Tools
+2. Verify all members have their OpenAlex ID configured
+3. Clear transients cache:
 
-### La sincronización se queda en "En cola"
-
-**Problema**: El estado no cambia de "queued"
-
-**Posibles causas**:
-1. **Action Scheduler no está funcionando**: Verifica que el cron de WordPress esté activo
-2. **Trabajo bloqueado**: Puede haber un trabajo anterior que falló
-
-**Solución**:
 ```bash
-# Ver trabajos pendientes con WP-CLI
-wp action-scheduler list --hook=openalex_sync_member_background
-
-# Cancelar trabajos pendientes
-wp action-scheduler cancel --hook=openalex_sync_member_background
-```
-
-O usa el plugin **Action Scheduler** para ver y gestionar trabajos.
-
-### Las publicaciones no aparecen en el frontend
-
-**Problema**: Las publicaciones se importaron pero no se muestran en `single-team.php`
-
-**Posibles causas**:
-1. **Caché**: Las publicaciones están en caché
-2. **Publicaciones ocultas**: Las publicaciones están marcadas como ocultas
-3. **Template incorrecto**: El tema no usa `single-team.php`
-
-**Solución**:
-```php
-// Limpiar caché de un miembro específico
-OpenAlex_Helpers::clear_member_publications_cache($post_id);
-
-// O limpiar toda la caché
+// Run once in functions.php or WP-CLI
 wp transient delete --all
 ```
 
-### Error "teachPress no está activo"
+### Sync stays "Queued"
 
-**Problema**: La sincronización falla con este mensaje
+**Problem**: Status doesn't change from "queued"
 
-**Solución**:
-1. Verifica que teachPress esté instalado y activo
-2. Verifica que las clases `TP_Publications` y `TP_Authors` existan
-3. Revisa la versión de teachPress (debe ser compatible)
+**Possible causes**:
+1. **Action Scheduler isn't working**: Verify WordPress cron is active
+2. **Stuck job**: There may be a previous failed job
 
-## 📊 Estructura de Base de Datos
+**Solution**:
 
-El plugin utiliza las siguientes tablas de teachPress:
+```bash
+# Check pending jobs with WP-CLI
+wp action-scheduler list --hook=openalex_sync_member_background
+
+# Cancel pending jobs
+wp action-scheduler cancel --hook=openalex_sync_member_background
+```
+
+Or use the **Action Scheduler** plugin to view and manage jobs.
+
+### Publications don't appear on frontend
+
+**Problem**: Publications were imported but don't show on `single-team.php`
+
+**Possible causes**:
+1. **Cache**: Publications are cached
+2. **Hidden publications**: Publications are marked as hidden
+3. **Wrong template**: Theme doesn't use `single-team.php`
+
+**Solution**:
+
+```php
+// Clear cache for a specific member
+OpenAlex_Helpers::clear_member_publications_cache($post_id);
+
+// Or clear all cache
+wp transient delete --all
+```
+
+### "teachPress is not active" error
+
+**Problem**: Sync fails with this message
+
+**Solution**:
+1. Verify teachPress is installed and active
+2. Verify `TP_Publications` and `TP_Authors` classes exist
+3. Check teachPress version (must be compatible)
+
+## 📊 Database Structure
+
+The plugin uses the following teachPress tables:
 
 ### `wp_teachpress_pub`
-Tabla principal de publicaciones.
+Main publications table.
 
 ### `wp_teachpress_pub_meta`
-Metadatos de publicaciones. El plugin agrega:
-- `openalex_work_id`: ID del work en OpenAlex
-- `openalex_member_id`: ID del post del miembro del equipo
-- `openalex_author_id_{author_id}`: ID del autor en OpenAlex
-- `openalex_hidden`: Si la publicación está oculta (1/0)
+Publication metadata. The plugin adds:
+- `openalex_work_id`: Work ID in OpenAlex
+- `openalex_member_id`: Team member post ID
+- `openalex_author_id_{author_id}`: Author's ID in OpenAlex
+- `openalex_hidden`: If publication is hidden (1/0)
 
 ### `wp_teachpress_authors`
-Autores registrados en teachPress.
+Authors registered in teachPress.
 
 ### `wp_teachpress_rel_pub_auth`
-Relaciones muchos-a-muchos entre publicaciones y autores.
+Many-to-many relationships between publications and authors.
 
-## 🔒 Seguridad
+## 🔒 Security
 
-- ✅ Validación y sanitización de todos los inputs
-- ✅ Nonces en todos los formularios
-- ✅ Verificación de permisos (`manage_options`, `edit_posts`)
-- ✅ Escape de outputs (`esc_html`, `esc_attr`, `esc_url`)
-- ✅ Preparación de consultas SQL (`$wpdb->prepare`)
-- ✅ No almacena credenciales sensibles en el código
+- ✅ Validation and sanitization of all inputs
+- ✅ Nonces on all forms
+- ✅ Permission verification (`manage_options`, `edit_posts`)
+- ✅ Output escaping (`esc_html`, `esc_attr`, `esc_url`)
+- ✅ SQL query preparation (`$wpdb->prepare`)
+- ✅ Does not store sensitive credentials in code
 
-## 🤝 Contribuir
+## 🤝 Contributing
 
-Las contribuciones son bienvenidas. Para contribuir:
+Contributions are welcome. To contribute:
 
-1. Fork el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📄 Licencia
+## 📄 License
 
-Este proyecto está bajo la Licencia GPL v2 o posterior.
+This project is licensed under the GPL v2 or later License.
 
-## 👤 Autor
+## 👤 Author
 
 **Carlos Lorenzetti**
 ICIC-UNS-CONICET
 
-## 🙏 Agradecimientos
+## 🙏 Acknowledgments
 
-- [OpenAlex](https://openalex.org/) por proporcionar acceso abierto a datos académicos
-- [teachPress](https://wordpress.org/plugins/teachpress/) por el sistema de gestión de publicaciones
-- [TLP Team](https://wordpress.org/plugins/tlp-team/) por el Custom Post Type para equipos
-- [Action Scheduler](https://actionscheduler.org/) por el sistema de cola de trabajos
+- OpenAlex for providing open access to academic data
+- teachPress for the publication management system
+- TLP Team for the team Custom Post Type
+- Action Scheduler for the job queue system
 
-## 📞 Soporte
+## 📞 Support
 
-Para reportar problemas o solicitar características:
-- [GitHub Issues](https://github.com/icic-uns-conicet/articles-scraper/issues)
+To report issues or request features:
+- GitHub Issues
 
 ---
 
-**Versión**: 4.1
-**Última actualización**: Junio 2026
+**Version**: 4.2
+**Last updated**: June 2026
