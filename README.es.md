@@ -1,5 +1,13 @@
 # OpenAlex Team Publications
 
+[![WordPress Plugin](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
+[![PHP](https://img.shields.io/badge/PHP-7.4%2B-8892BF.svg)](https://php.net/)
+[![License](https://img.shields.io/badge/License-GPLv2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
+
+#### (Choose your language below / Elija su idioma abajo)
+[![English](https://img.shields.io/badge/Language-English-blue)](README.md)
+[![Español](https://img.shields.io/badge/Language-Español-red)](README.es.md)
+
 Plugin de WordPress que integra el Custom Post Type `team` (de [TLP Team](https://wordpress.org/plugins/tlp-team/)) con la API de [OpenAlex](https://openalex.org/) para importar y gestionar automáticamente las publicaciones académicas de los miembros de un equipo de investigación, almacenándolas en [teachPress](https://wordpress.org/plugins/teachpress/).
 
 ## 📋 Tabla de Contenidos

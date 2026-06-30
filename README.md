@@ -4,6 +4,10 @@
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-8892BF.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPLv2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 
+#### (Choose your language below / Elija su idioma abajo)
+[![English](https://img.shields.io/badge/Language-English-blue)](README.md)
+[![Español](https://img.shields.io/badge/Language-Español-red)](README.es.md)
+
 A WordPress plugin that integrates the `team` Custom Post Type (from TLP Team) with the OpenAlex API to automatically import and manage academic publications for research team members, storing them in teachPress.
 
 ## 📋 Table of Contents
