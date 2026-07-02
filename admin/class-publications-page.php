@@ -50,6 +50,22 @@ class OpenAlex_Publications_Page
 
     public function render_page(): void
     {
+        if (! isset($_GET['filter_lang']) && function_exists('pll_default_language')) {
+            $default_lang = pll_default_language();
+            if (! empty($default_lang)) {
+                $redirect_url = add_query_arg(
+                    [
+                        'page' => 'openalex-publications',
+                        'filter_lang' => $default_lang,
+                    ],
+                    admin_url('admin.php')
+                );
+
+                wp_redirect($redirect_url);
+                exit;
+            }
+        }
+
         $post_id = isset($_GET["post_id"])
             ? intval(sanitize_text_field($_GET["post_id"]))
             : 0;
@@ -57,8 +73,7 @@ class OpenAlex_Publications_Page
         echo '<div class="wrap"><h1>' .
             esc_html__("Publicaciones OpenAlex", "openalex-team") .
             "</h1>";
-
-        $this->render_polylang_language_filter();
+        
         $this->render_invalidate_transients_button();
         $this->maybe_show_cache_cleared_notice();
         $this->maybe_show_sync_notice();
@@ -66,6 +81,7 @@ class OpenAlex_Publications_Page
         if ($post_id) {
             $this->render_member_detail($post_id);
         } else {
+            $this->render_polylang_language_filter();
             $this->render_members_list();
         }
 
@@ -134,8 +150,7 @@ class OpenAlex_Publications_Page
             <input type="hidden" name="redirect_to" value="<?php echo esc_attr($current_page_url); ?>">
             <?php wp_nonce_field('openalex_invalidate_transients', 'openalex_invalidate_nonce'); ?>
             <?php submit_button($button_text, 'secondary', 'submit', false); ?>
-        </form>
-        <br><br>
+        </form>        
         <?php
     }
 
@@ -164,9 +179,6 @@ class OpenAlex_Publications_Page
 
         $base_args = wp_unslash($_GET);
         $base_args['page'] = 'openalex-publications';
-
-        echo '<div class="openalex-language-filter" style="margin-bottom:1rem; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center;">';
-        echo '<span style="font-weight:600; margin-right:.5rem;">' . esc_html__('Idioma:', "openalex-team") . '</span>';
 
         foreach ($languages as $lang) {
             $code = $lang['slug'] ?? ($lang['code'] ?? '');
@@ -200,8 +212,6 @@ class OpenAlex_Publications_Page
 
             echo '<a href="' . $url . '" class="' . esc_attr($button_class) . '" style="display:inline-flex;align-items:center;gap:6px;min-width:120px;justify-content:center;">' . $icon_html . esc_html($label) . '</a>';
         }
-
-        echo '</div>';
     }
 
     private function get_selected_polylang_language(): string
@@ -735,6 +745,10 @@ class OpenAlex_Publications_Page
 
         if (isset($_POST["order"]) && $_POST["order"] !== "") {
             $redirect["order"] = sanitize_key(wp_unslash($_POST["order"]));
+        }
+
+        if (isset($_POST["filter_lang"]) && $_POST["filter_lang"] !== "") {
+            $redirect["filter_lang"] = sanitize_text_field(wp_unslash($_POST["filter_lang"]));
         }
 
         wp_redirect(add_query_arg($redirect, admin_url("admin.php")));
