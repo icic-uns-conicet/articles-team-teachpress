@@ -36,7 +36,7 @@ class OpenAlex_Single_Team
      * Genera el bloque HTML e inyecta vía JS al final del contenedor del miembro.
      */
     public function inject_publications(): void
-    {   
+    {
         if (! is_singular('team')) return;
         if (! OpenAlex_Helpers::teachpress_active()) return;
 

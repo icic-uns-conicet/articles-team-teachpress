@@ -285,14 +285,30 @@ class OpenAlex_Helpers
 
     /**
      * Obtiene publicaciones asociadas a un miembro.
+     * Resuelve el ID del miembro en el idioma por defecto si Polylang está activo.
      *
      * @param int  $post_id
      * @param bool $only_visible Si true, excluye las marcadas como ocultas.
      */
+    public static function resolve_member_post_id(int $post_id): int
+    {
+        if (! function_exists('pll_get_post')) {
+            return $post_id;
+        }
+
+        $default_lang = function_exists('pll_default_language')
+            ? pll_default_language()
+            : 'es';
+
+        $translated_id = pll_get_post($post_id, $default_lang);
+        return $translated_id ? intval($translated_id) : $post_id;
+    }
+
     public static function get_member_publications(int $post_id, bool $only_visible = true): array
     {
         global $wpdb;
 
+        $post_id = self::resolve_member_post_id($post_id);
         $suffix        = $only_visible ? 'visible' : 'all';
         $transient_key = 'openalex_member_pubs_' . $post_id . '_' . $suffix;
 
@@ -329,6 +345,7 @@ class OpenAlex_Helpers
 
     public static function clear_member_publications_cache(int $post_id): void
     {
+        $post_id = self::resolve_member_post_id($post_id);
         delete_transient('openalex_member_pubs_' . $post_id . '_visible');
         delete_transient('openalex_member_pubs_' . $post_id . '_all');
         delete_transient('openalex_member_pubs_html_' . $post_id);
