@@ -36,7 +36,7 @@ class OpenAlex_Single_Team
      * Genera el bloque HTML e inyecta vía JS al final del contenedor del miembro.
      */
     public function inject_publications(): void
-    {
+    {   
         if (! is_singular('team')) return;
         if (! OpenAlex_Helpers::teachpress_active()) return;
 
@@ -53,9 +53,7 @@ class OpenAlex_Single_Team
             $html = $this->render_publications_html($pubs);
             set_transient($html_cache_key, $html, 12 * HOUR_IN_SECONDS);
         }
-
-?>
-        <?php
+        
         // Output full HTML server-side so crawlers can index it.
         // Render here and then (for visual placement) move into the
         // first `.tlp-single-container` on the page using a minimal mover.
