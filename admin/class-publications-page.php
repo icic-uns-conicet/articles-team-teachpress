@@ -58,6 +58,7 @@ class OpenAlex_Publications_Page
             esc_html__("Publicaciones OpenAlex", "openalex-team") .
             "</h1>";
 
+        $this->render_polylang_language_filter();
         $this->render_invalidate_transients_button();
         $this->maybe_show_cache_cleared_notice();
         $this->maybe_show_sync_notice();
@@ -138,6 +139,88 @@ class OpenAlex_Publications_Page
         <?php
     }
 
+    private function render_polylang_language_filter(): void
+    {
+        if (! function_exists('pll_the_languages')) {
+            return;
+        }
+
+        $languages = pll_the_languages([
+            'raw' => 1,
+            'hide_if_empty' => 0,
+        ]);
+
+        if (empty($languages) || ! is_array($languages)) {
+            return;
+        }
+
+        $current = isset($_GET['filter_lang'])
+            ? sanitize_text_field($_GET['filter_lang'])
+            : (function_exists('pll_current_language') ? pll_current_language() : '');
+
+        if (empty($current) && function_exists('pll_default_language')) {
+            $current = pll_default_language();
+        }
+
+        $base_args = wp_unslash($_GET);
+        $base_args['page'] = 'openalex-publications';
+
+        echo '<div class="openalex-language-filter" style="margin-bottom:1rem; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center;">';
+        echo '<span style="font-weight:600; margin-right:.5rem;">' . esc_html__('Idioma:', "openalex-team") . '</span>';
+
+        foreach ($languages as $lang) {
+            $code = $lang['slug'] ?? ($lang['code'] ?? '');
+            if (! $code) {
+                continue;
+            }
+
+            $label = $lang['translated_name'] ?? $lang['name'] ?? $code;
+            $flag = $lang['flag'] ?? '';
+            $args = array_merge($base_args, ['filter_lang' => $code]);
+            $url = esc_url(add_query_arg($args, admin_url('admin.php')));
+            $active = $code === $current;
+            $button_class = $active ? 'button button-primary' : 'button';
+            $icon_html = '';
+
+            if (! empty($flag)) {
+                if (strpos($flag, '<img') !== false) {
+                    $icon_html = wp_kses($flag, [
+                        'img' => [
+                            'src' => true,
+                            'alt' => true,
+                            'width' => true,
+                            'height' => true,
+                            'style' => true,
+                        ],
+                    ]) . ' ';
+                } else {
+                    $icon_html = '<img src="' . esc_url($flag) . '" alt="' . esc_attr($label) . '" style="width:18px;height:12px;vertical-align:middle;margin-right:6px;">';
+                }
+            }
+
+            echo '<a href="' . $url . '" class="' . esc_attr($button_class) . '" style="display:inline-flex;align-items:center;gap:6px;min-width:120px;justify-content:center;">' . $icon_html . esc_html($label) . '</a>';
+        }
+
+        echo '</div>';
+    }
+
+    private function get_selected_polylang_language(): string
+    {
+        if (isset($_GET['filter_lang'])) {
+            return sanitize_text_field(wp_unslash($_GET['filter_lang']));
+        }
+
+        if (function_exists('pll_current_language')) {
+            return pll_current_language();
+        }
+
+        if (function_exists('pll_default_language')) {
+            return pll_default_language();
+        }
+
+        return '';
+    }
+
     public function handle_invalidate_transients(): void
     {
         if (!current_user_can('manage_options')) {
@@ -194,7 +277,9 @@ class OpenAlex_Publications_Page
 
     private function render_members_list(): void
     {
-        $members = get_posts([
+        $current_lang = $this->get_selected_polylang_language();
+
+        $args = [
             "post_type" => "team",
             "numberposts" => -1,
             "orderby" => "title",
@@ -202,7 +287,13 @@ class OpenAlex_Publications_Page
             "meta_query" => [
                 ["key" => "openalex_id", "value" => "", "compare" => "!="],
             ],
-        ]);
+        ];
+
+        if ($current_lang && function_exists('pll_current_language')) {
+            $args['lang'] = $current_lang;
+        }
+
+        $members = get_posts($args);
 
         if (empty($members)) {
             echo '<div class="notice notice-info inline"><p>' .
@@ -318,11 +409,16 @@ class OpenAlex_Publications_Page
                         </button>
                     </form>
 
+                    <?php $view_url_args = [
+                        'page' => 'openalex-publications',
+                        'post_id' => $m->ID,
+                    ];
+                    if (! empty($_GET['filter_lang'])) {
+                        $view_url_args['filter_lang'] = sanitize_text_field(wp_unslash($_GET['filter_lang']));
+                    }
+                    ?>
                     <a class="button" href="<?php echo esc_url(
-                        admin_url(
-                            "admin.php?page=openalex-publications&post_id=" .
-                                $m->ID
-                        )
+                        add_query_arg($view_url_args, admin_url('admin.php'))
                     ); ?>" <?php echo $button_style; ?> style="margin-left:6px;">
                     <?php echo esc_html__("Ver publicaciones", "openalex-team"); ?>
                     </a>
@@ -347,8 +443,15 @@ class OpenAlex_Publications_Page
         $last_sync = get_post_meta($post_id, "openalex_last_sync", true);
         $job = OpenAlex_Job_Queue::get_member_status($post_id);
 
+        $back_url = [
+            'page' => 'openalex-publications',
+        ];
+        if (! empty($_GET['filter_lang'])) {
+            $back_url['filter_lang'] = sanitize_text_field(wp_unslash($_GET['filter_lang']));
+        }
+
         echo '<p><a href="' .
-            esc_url(admin_url("admin.php?page=openalex-publications")) .
+            esc_url(add_query_arg($back_url, admin_url('admin.php'))) .
             '">← '. esc_html__("Volver", "openalex-team") .'</a></p>';
         echo "<h2>" . esc_html($post->post_title) . "</h2>";
 
@@ -418,6 +521,11 @@ class OpenAlex_Publications_Page
             echo '<input type="hidden" name="post_id" value="' .
                 intval($post_id) .
                 '">';
+            if (! empty($_GET['filter_lang'])) {
+                echo '<input type="hidden" name="filter_lang" value="' .
+                    esc_attr(sanitize_text_field(wp_unslash($_GET['filter_lang']))) .
+                    '">';
+            }
             $current_orderby = isset($_GET["orderby"])
                 ? sanitize_key($_GET["orderby"])
                 : "year";
@@ -477,14 +585,18 @@ class OpenAlex_Publications_Page
             submit_button(__("Filtrar", "openalex-team"), "secondary", "", false);
 
             if ($current_year || $current_type || $current_hidden) {
-                $clear_url = admin_url(
-                    "admin.php?page=openalex-publications&post_id=" . $post_id
-                );
-                echo ' <a href="' .
-                    esc_url($clear_url) .
-                    '" class="button">'.esc_html__('Limpiar filtros', "openalex-team").'</a>';
-            }
+                    $clear_url_args = [
+                        'page' => 'openalex-publications',
+                        'post_id' => $post_id,
+                    ];
+                    if (! empty($_GET['filter_lang'])) {
+                        $clear_url_args['filter_lang'] = sanitize_text_field(wp_unslash($_GET['filter_lang']));
+                    }
 
+                    echo ' <a href="' .
+                        esc_url(add_query_arg($clear_url_args, admin_url('admin.php'))) .
+                        '" class="button">'.esc_html__('Limpiar filtros', "openalex-team").'</a>';
+                }
             echo "</div>";            
             echo "</form>";
 
@@ -507,6 +619,11 @@ class OpenAlex_Publications_Page
             echo '<input type="hidden" name="filter_hidden" value="' .
                 esc_attr($current_hidden) .
                 '">';
+            if (! empty($_GET['filter_lang'])) {
+                echo '<input type="hidden" name="filter_lang" value="' .
+                    esc_attr(sanitize_text_field(wp_unslash($_GET['filter_lang']))) .
+                    '">';
+            }
 
             wp_nonce_field(
                 "openalex_save_visibility_" . $post_id,
