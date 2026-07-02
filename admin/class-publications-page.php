@@ -54,10 +54,13 @@ class OpenAlex_Publications_Page
             $default_lang = pll_default_language();
             if (! empty($default_lang)) {
                 $redirect_url = add_query_arg(
-                    [
-                        'page' => 'openalex-publications',
-                        'filter_lang' => $default_lang,
-                    ],
+                    array_merge(
+                        wp_unslash($_GET),
+                        [
+                            'page' => 'openalex-publications',
+                            'filter_lang' => $default_lang,
+                        ]
+                    ),
                     admin_url('admin.php')
                 );
 
