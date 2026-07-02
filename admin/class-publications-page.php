@@ -61,7 +61,7 @@ class OpenAlex_Publications_Page
                             'filter_lang' => $default_lang,
                         ]
                     ),
-                    admin_url('admin.php')
+                    admin_url('edit.php?post_type=team')
                 );
 
                 wp_redirect($redirect_url);
@@ -136,15 +136,26 @@ class OpenAlex_Publications_Page
         $member_id = isset($_GET['post_id']) ? intval(sanitize_text_field($_GET['post_id'])) : 0;
         if ($member_id > 0) {
             // Vista de detalle de un miembro: botón específico
+            $back_url = [
+                'page' => 'openalex-publications',
+            ];
+            if (! empty($_GET['filter_lang'])) {
+                $back_url['filter_lang'] = sanitize_text_field(wp_unslash($_GET['filter_lang']));
+            }
+            ?>
+            <a class="button button-secondary" href="<?php echo esc_url(add_query_arg($back_url, admin_url('edit.php?post_type=team'))); ?>">
+                    ← <?php echo esc_html__("Volver", "openalex-team"); ?>
+            </a>
+            <?php
             $button_text = '🗑️ ' . esc_html__('Limpiar caché miembro', "openalex-team");
         } else {
             // Vista de lista: botón global
             $button_text = esc_html__('Limpiar caché de publicaciones', "openalex-team");
         }
 
-        $current_page_url = esc_url_raw(add_query_arg(wp_unslash($_GET), admin_url('admin.php')));
+        $current_page_url = esc_url_raw(add_query_arg(wp_unslash($_GET), admin_url('edit.php?post_type=team')));
         if (false === strpos($current_page_url, 'page=openalex-publications')) {
-            $current_page_url = esc_url_raw(add_query_arg('page', 'openalex-publications', admin_url('admin.php')));
+            $current_page_url = esc_url_raw(add_query_arg('page', 'openalex-publications', admin_url('edit.php?post_type=team')));
         }
             ?>
         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
@@ -192,7 +203,7 @@ class OpenAlex_Publications_Page
             $label = $lang['translated_name'] ?? $lang['name'] ?? $code;
             $flag = $lang['flag'] ?? '';
             $args = array_merge($base_args, ['filter_lang' => $code]);
-            $url = esc_url(add_query_arg($args, admin_url('admin.php')));
+            $url = esc_url(add_query_arg($args, admin_url('edit.php?post_type=team')));
             $active = $code === $current;
             $button_class = $active ? 'button button-primary' : 'button';
             $icon_html = '';
@@ -275,7 +286,7 @@ class OpenAlex_Publications_Page
 
         set_transient('openalex_cache_cleared_' . get_current_user_id(), $message, 60);        
 
-        $redirect_url = admin_url('admin.php?page=openalex-publications');
+        $redirect_url = admin_url('edit.php?post_type=team&page=openalex-publications');
         if (! empty($_POST['redirect_to'])) {
             $candidate = esc_url_raw(wp_unslash($_POST['redirect_to']));
             if (false !== strpos($candidate, 'page=openalex-publications') && 0 === strpos($candidate, admin_url())) {
@@ -431,7 +442,7 @@ class OpenAlex_Publications_Page
                     }
                     ?>
                     <a class="button" href="<?php echo esc_url(
-                        add_query_arg($view_url_args, admin_url('admin.php'))
+                        add_query_arg($view_url_args, admin_url('edit.php?post_type=team'))
                     ); ?>" <?php echo $button_style; ?> style="margin-left:6px;">
                     <?php echo esc_html__("Ver publicaciones", "openalex-team"); ?>
                     </a>
@@ -463,9 +474,6 @@ class OpenAlex_Publications_Page
             $back_url['filter_lang'] = sanitize_text_field(wp_unslash($_GET['filter_lang']));
         }
 
-        echo '<p><a href="' .
-            esc_url(add_query_arg($back_url, admin_url('admin.php'))) .
-            '">← '. esc_html__("Volver", "openalex-team") .'</a></p>';
         echo "<h2>" . esc_html($post->post_title) . "</h2>";
 
         if (!$openalex_id) {
@@ -528,7 +536,7 @@ class OpenAlex_Publications_Page
 
             // Formulario GET: solo filtros
             echo '<form method="get" action="' .
-                esc_url(admin_url("admin.php")) .
+                esc_url(admin_url("edit.php?post_type=team")) .
                 '" style="margin:16px 0;">';
             echo '<input type="hidden" name="page" value="openalex-publications">';
             echo '<input type="hidden" name="post_id" value="' .
@@ -607,7 +615,7 @@ class OpenAlex_Publications_Page
                     }
 
                     echo ' <a href="' .
-                        esc_url(add_query_arg($clear_url_args, admin_url('admin.php'))) .
+                        esc_url(add_query_arg($clear_url_args, admin_url('edit.php?post_type=team'))) .
                         '" class="button">'.esc_html__('Limpiar filtros', "openalex-team").'</a>';
                 }
             echo "</div>";            
@@ -754,7 +762,7 @@ class OpenAlex_Publications_Page
             $redirect["filter_lang"] = sanitize_text_field(wp_unslash($_POST["filter_lang"]));
         }
 
-        wp_redirect(add_query_arg($redirect, admin_url("admin.php")));
+        wp_redirect(add_query_arg($redirect, admin_url("edit.php?post_type=team")));
         exit();
     }
 
