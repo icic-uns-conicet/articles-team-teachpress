@@ -121,10 +121,16 @@ class OpenAlex_Publications_Page
             // Vista de lista: botón global
             $button_text = esc_html__('Limpiar caché de publicaciones', "openalex-team");
         }
+
+        $current_page_url = esc_url_raw(add_query_arg(wp_unslash($_GET), admin_url('admin.php')));
+        if (false === strpos($current_page_url, 'page=openalex-publications')) {
+            $current_page_url = esc_url_raw(add_query_arg('page', 'openalex-publications', admin_url('admin.php')));
+        }
             ?>
         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="display:inline;">
             <input type="hidden" name="action" value="openalex_invalidate_transients">
             <input type="hidden" name="member_id" value="<?php echo esc_attr($member_id); ?>">
+            <input type="hidden" name="redirect_to" value="<?php echo esc_attr($current_page_url); ?>">
             <?php wp_nonce_field('openalex_invalidate_transients', 'openalex_invalidate_nonce'); ?>
             <?php submit_button($button_text, 'secondary', 'submit', false); ?>
         </form>
@@ -153,7 +159,7 @@ class OpenAlex_Publications_Page
             $member_post = get_post($member_id);
             $member_name = $member_post ? $member_post->post_title : 'Miembro';
             $message = sprintf(__('Caché del miembro "%s" limpiada con éxito.', "openalex-team"), $member_name);
-        } else {        
+        } else {
             // Clear all member publication caches
             $members = get_posts([
                 'post_type'   => 'team',
@@ -168,16 +174,19 @@ class OpenAlex_Publications_Page
             foreach ($members as $member) {
                 OpenAlex_Helpers::clear_member_publications_cache($member->ID);
             }
-            $message = __('Caché de todas las publicaciones limpiada con éxito.', 'openalex-team');
+            $message = __('Caché de todas las publicaciones limpiada con éxito.', "openalex-team");
         }
 
         set_transient('openalex_cache_cleared_' . get_current_user_id(), $message, 60);        
 
         $redirect_url = admin_url('admin.php?page=openalex-publications');
-        if ($member_id > 0) {
-            $redirect_url = add_query_arg('post_id', $member_id, $redirect_url);
+        if (! empty($_POST['redirect_to'])) {
+            $candidate = esc_url_raw(wp_unslash($_POST['redirect_to']));
+            if (false !== strpos($candidate, 'page=openalex-publications') && 0 === strpos($candidate, admin_url())) {
+                $redirect_url = $candidate;
+            }
         }
-        
+
         wp_redirect($redirect_url);
 
         exit;
@@ -205,17 +214,17 @@ class OpenAlex_Publications_Page
             return;
         }
         ?>
-        <p><?php echo esc_html__("Miembros con ID OpenAlex:", 'openalex-team'); ?> <strong><?php echo count(
+        <p><?php echo esc_html__("Miembros con ID OpenAlex:", "openalex-team"); ?> <strong><?php echo count(
             $members
         ); ?></strong></p>
         <table class="widefat striped openalex-members-table">
             <thead><tr>
-                <th><?php echo esc_html__("Nombre", 'openalex-team'); ?></th>
-                <th><?php echo esc_html__("Equipos", 'openalex-team'); ?></th>
-                <th><?php echo esc_html__("ID de OpenAlex", 'openalex-team'); ?></th>
-                <th><?php echo esc_html__("Última sincr.", 'openalex-team'); ?></th>
-                <th><?php echo esc_html__("Estado", 'openalex-team'); ?></th>
-                <th><?php echo esc_html__("Acción", 'openalex-team'); ?></th>
+                <th><?php echo esc_html__("Nombre", "openalex-team"); ?></th>
+                <th><?php echo esc_html__("Equipos", "openalex-team"); ?></th>
+                <th><?php echo esc_html__("ID de OpenAlex", "openalex-team"); ?></th>
+                <th><?php echo esc_html__("Última sincr.", "openalex-team"); ?></th>
+                <th><?php echo esc_html__("Estado", "openalex-team"); ?></th>
+                <th><?php echo esc_html__("Acción", "openalex-team"); ?></th>
             </tr></thead>
             <tbody>
             <?php foreach ($members as $m):
@@ -255,9 +264,34 @@ class OpenAlex_Publications_Page
                     ?>
                 </td>
                 <td>
+                    <?php
+                    $button_style = 'style="display:inline-block; min-width:150px; width:150px; text-align:center;"';
+                    $current_page_url = esc_url_raw( add_query_arg( wp_unslash( $_GET ), admin_url( 'admin.php' ) ) );
+                    if ( false === strpos( $current_page_url, 'page=openalex-publications' ) ) {
+                        $current_page_url = esc_url_raw( add_query_arg( 'page', 'openalex-publications', admin_url( 'admin.php' ) ) );
+                    }
+                    ?>
                     <form method="post" action="<?php echo esc_url(
                         admin_url("admin-post.php")
                     ); ?>" style="display:inline;">
+                        <input type="hidden" name="action"  value="openalex_invalidate_transients">
+                        <input type="hidden" name="member_id" value="<?php echo esc_attr(
+                            $m->ID
+                        ); ?>">
+                        <input type="hidden" name="redirect_to" value="<?php echo esc_attr( $current_page_url ); ?>">
+                        <?php wp_nonce_field(
+                            'openalex_invalidate_transients',
+                            'openalex_invalidate_nonce'
+                        ); ?>
+
+                        <button type="submit" class="button" <?php echo $button_style; ?>>
+                            <?php echo esc_html__( 'Borrar caché', "openalex-team" ); ?>
+                        </button>
+                    </form>
+
+                    <form method="post" action="<?php echo esc_url(
+                        admin_url("admin-post.php")
+                    ); ?>" style="display:inline; margin-left:6px;">
                         <input type="hidden" name="action"  value="openalex_sync">
                         <input type="hidden" name="post_id" value="<?php echo esc_attr(
                             $m->ID
@@ -269,16 +303,17 @@ class OpenAlex_Publications_Page
 
                         <button type="submit" class="button button-primary" <?php disabled(
                             $job["is_locked"],
-                            true
-                        ); ?>>
+                            true,
+                            false
+                        ); echo ' ' . $button_style; ?>>
                             <?php if ($job["status"] === "queued") {
-                                echo "En cola...";
+                                echo esc_html__("En cola", "openalex-team") . '...';
                             } elseif ($job["status"] === "running") {
-                                echo "Procesando...";
+                                echo esc_html__("Procesando", "openalex-team") . '...';
                             } else {
                                 echo $last_sync
-                                    ? "↻ " . esc_html__("Re-sincronizar", 'openalex-team')
-                                    : "⬇ " . esc_html__("Sincronizar", 'openalex-team');
+                                    ? '↻ ' . esc_html__("Re-sincronizar", "openalex-team")
+                                    : '⬇ ' . esc_html__("Sincronizar", "openalex-team");
                             } ?>
                         </button>
                     </form>
@@ -288,8 +323,8 @@ class OpenAlex_Publications_Page
                             "admin.php?page=openalex-publications&post_id=" .
                                 $m->ID
                         )
-                    ); ?>">
-                    <?php echo esc_html__("Ver publicaciones", 'openalex-team'); ?>
+                    ); ?>" <?php echo $button_style; ?> style="margin-left:6px;">
+                    <?php echo esc_html__("Ver publicaciones", "openalex-team"); ?>
                     </a>
                 </td>
             </tr>
@@ -338,13 +373,13 @@ class OpenAlex_Publications_Page
 
         if (isset($_GET["updated"]) && "1" === $_GET["updated"]) {
             echo '<div class="notice notice-success inline"><p>'.
-                esc_html__('La visibilidad de las publicaciones fue actualizada.', 'openalex-team').'</p></div>';
+                esc_html__('La visibilidad de las publicaciones fue actualizada.', "openalex-team").'</p></div>';
         }
 
         $pubs = OpenAlex_Helpers::get_member_publications($post_id, false);
         if (empty($pubs)) {
             echo '<p><em>'.
-                esc_html__('No hay publicaciones importadas aún.', 'openalex-team' ).'</em></p>';
+                esc_html__('No hay publicaciones importadas aún.', "openalex-team" ).'</em></p>';
         } else {
             $items = array_map(function ($pub) {
                 return [
@@ -401,7 +436,7 @@ class OpenAlex_Publications_Page
 
             if (!empty($years)) {
                 echo '<select name="filter_year" style="margin-right:5px;">';
-                echo '<option value="">'.esc_html__('Filtrar por año', 'openalex-team').'</option>';
+                echo '<option value="">'.esc_html__('Filtrar por año', "openalex-team").'</option>';
                 foreach ($years as $year) {
                     echo '<option value="' .
                         esc_attr($year) .
@@ -416,7 +451,7 @@ class OpenAlex_Publications_Page
 
             if (!empty($types)) {
                 echo '<select name="filter_type" style="margin-right:5px;">';
-                echo '<option value="">'.esc_html__('Filtrar por tipo', 'openalex-team').'</option>';
+                echo '<option value="">'.esc_html__('Filtrar por tipo', "openalex-team").'</option>';
                 foreach ($types as $type) {
                     echo '<option value="' .
                         esc_attr($type) .
@@ -430,13 +465,13 @@ class OpenAlex_Publications_Page
             }
 
             echo '<select name="filter_hidden" style="margin-right:10px;">';
-            echo '<option value="">'.esc_html__('Filtrar por estado', 'openalex-team').'</option>';
+            echo '<option value="">'.esc_html__('Filtrar por estado', "openalex-team").'</option>';
             echo '<option value="yes" ' .
                 selected($current_hidden, "yes", false) .
-                ">".esc_html__('Ocultas', 'openalex-team')."</option>";
+                ">".esc_html__('Ocultas', "openalex-team")."</option>";
             echo '<option value="no" ' .
                 selected($current_hidden, "no", false) .
-                ">".esc_html__('Visibles', 'openalex-team')."</option>";
+                ">".esc_html__('Visibles', "openalex-team")."</option>";
             echo "</select>";
 
             submit_button(__("Filtrar", "openalex-team"), "secondary", "", false);
@@ -447,7 +482,7 @@ class OpenAlex_Publications_Page
                 );
                 echo ' <a href="' .
                     esc_url($clear_url) .
-                    '" class="button">'.esc_html__('Limpiar filtros', 'openalex-team').'</a>';
+                    '" class="button">'.esc_html__('Limpiar filtros', "openalex-team").'</a>';
             }
 
             echo "</div>";            
@@ -480,7 +515,7 @@ class OpenAlex_Publications_Page
 
             $table->display();
 
-            echo '<p style="margin-top:12px;"><button type="submit" class="button button-primary">'.esc_html__('Guardar visibilidad', 'openalex-team').'</button></p>';
+            echo '<p style="margin-top:12px;"><button type="submit" class="button button-primary">'.esc_html__('Guardar visibilidad', "openalex-team").'</button></p>';
             echo "</form>";
         }
 
