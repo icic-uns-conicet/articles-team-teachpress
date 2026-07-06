@@ -277,9 +277,6 @@ class OpenAlex_Blocks {
         ob_start();
         ?>
         <div class="openalex-selected-publications">
-        <h3 class="openalex-publications__title">
-                <?php echo esc_html__('Publicaciones seleccionadas', 'openalex-team'); ?>
-        </h3>
             <?php foreach ($grouped as $year => $pubs): ?>
                 <div class="openalex-publications__year-group">
                     <h4 class="openalex-publications__year"><?php echo esc_html($year); ?></h4>
