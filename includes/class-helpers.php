@@ -82,7 +82,7 @@ class OpenAlex_Helpers
 .openalex-pub-doi:hover { text-decoration:underline; }
 .openalex-pub-authors a { color: inherit; text-decoration: underline; text-underline-offset: 2px; opacity: 0.85; }
 .openalex-pub-authors a:hover { opacity: 1; }
-.openalex-selected-publications { margin-top:2.5em; padding-top:1.5em; border-top:2px solid #e0e0e0; font-size:.95em; line-height:1.55; }
+.openalex-selected-publications {padding-top:1.5em; border-top:2px solid #e0e0e0; font-size:.95em; line-height:1.55; }
         ';
     }
 
