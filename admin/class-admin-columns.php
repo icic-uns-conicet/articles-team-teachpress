@@ -97,24 +97,18 @@ class OpenAlex_Admin_Columns {
             </select>
         <?php endif; ?>
 
-        <div class="alignleft actions" style="margin-right:12px;">
-            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data" style="display:inline-flex; align-items:center; gap:8px;">
-                <input type="hidden" name="action" value="openalex_import_team_members_csv" />
-                <?php wp_nonce_field( 'openalex_import_team_members_csv', 'openalex_import_team_members_csv_nonce' ); ?>
-                <label class="screen-reader-text" for="openalex-members-csv"><?php esc_html_e( 'CSV de miembros', 'openalex-team' ); ?></label>
-                <input type="file" name="openalex_members_csv" id="openalex-members-csv" accept=".csv,text/csv" />
-                <button type="submit" class="button">
-                    <?php esc_html_e( 'Importar custom fields', 'openalex-team' ); ?>
-                </button>
-            </form>
+        <div class="alignleft actions" style="margin-right:12px; display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <?php wp_nonce_field( 'openalex_import_team_members_csv', 'openalex_import_team_members_csv_nonce' ); ?>
+            <label class="screen-reader-text" for="openalex-members-csv"><?php esc_html_e( 'CSV de miembros', 'openalex-team' ); ?></label>
+            <input type="file" name="openalex_members_csv" id="openalex-members-csv" accept=".csv,text/csv" />
+            <button type="submit" class="button" name="action" value="openalex_import_team_members_csv" formaction="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" formmethod="post" formenctype="multipart/form-data">
+                <?php esc_html_e( 'Importar custom fields', 'openalex-team' ); ?>
+            </button>
 
-            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block; margin-left:8px;">
-                <input type="hidden" name="action" value="openalex_export_team_members_csv" />
-                <?php wp_nonce_field( 'openalex_export_team_members_csv', 'openalex_export_team_members_csv_nonce' ); ?>
-                <button type="submit" class="button button-secondary">
-                    <?php esc_html_e( 'Descargar CSV', 'openalex-team' ); ?>
-                </button>
-            </form>
+            <?php wp_nonce_field( 'openalex_export_team_members_csv', 'openalex_export_team_members_csv_nonce' ); ?>
+            <button type="submit" class="button button-secondary" name="action" value="openalex_export_team_members_csv" formaction="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" formmethod="post" style="margin-left:8px;">
+                <?php esc_html_e( 'Descargar CSV', 'openalex-team' ); ?>
+            </button>
         </div><?php
     }
 
@@ -130,6 +124,7 @@ class OpenAlex_Admin_Columns {
     }
 
     public function handle_import_csv(): void {
+        OpenAlex_Helpers::log( 'Iniciando importación de CSV de miembros del equipo...' );
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( 'Sin permisos.', 403 );
         }
@@ -141,8 +136,29 @@ class OpenAlex_Admin_Columns {
             wp_die( 'Solicitud no válida.', 403 );
         }
 
+        $upload_error = isset( $_FILES['openalex_members_csv']['error'] ) ? (int) $_FILES['openalex_members_csv']['error'] : UPLOAD_ERR_NO_FILE;
+
+        if ( $upload_error !== UPLOAD_ERR_OK ) {
+            wp_redirect( add_query_arg(
+                [
+                    'post_type'                       => 'team',
+                    'openalex_members_csv_status'     => 'error',
+                    'openalex_members_csv_upload_err' => $upload_error,
+                ],
+                admin_url( 'edit.php' )
+            ) );
+            exit;
+        }
+
         if ( empty( $_FILES['openalex_members_csv']['tmp_name'] ) || ! is_uploaded_file( $_FILES['openalex_members_csv']['tmp_name'] ) ) {
-            wp_redirect( add_query_arg( [ 'post_type' => 'team', 'openalex_members_csv_status' => 'error' ], admin_url( 'edit.php' ) ) );
+            wp_redirect( add_query_arg(
+                [
+                    'post_type'                       => 'team',
+                    'openalex_members_csv_status'     => 'error',
+                    'openalex_members_csv_upload_err' => UPLOAD_ERR_NO_FILE,
+                ],
+                admin_url( 'edit.php' )
+            ) );
             exit;
         }
 
@@ -158,6 +174,7 @@ class OpenAlex_Admin_Columns {
 
         foreach ( $rows as $row ) {
             $post_id = isset( $row['id_post'] ) ? absint( $row['id_post'] ) : 0;
+            OpenAlex_Helpers::log( 'Procesando fila de importación... id_post: ' . $post_id );
             if ( $post_id < 1 ) {
                 $skipped++;
                 continue;
@@ -266,7 +283,22 @@ class OpenAlex_Admin_Columns {
         }
 
         if ( $status === 'error' ) {
-            echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'No fue posible procesar el CSV. Revisa el formato o el archivo.', 'openalex-team' ) . '</p></div>';
+            $upload_err  = isset( $_GET['openalex_members_csv_upload_err'] ) ? (int) $_GET['openalex_members_csv_upload_err'] : null;
+            $upload_msgs = [
+                UPLOAD_ERR_INI_SIZE   => __( 'El archivo supera el límite permitido por el servidor (upload_max_filesize).', 'openalex-team' ),
+                UPLOAD_ERR_FORM_SIZE  => __( 'El archivo supera el límite indicado en el formulario.', 'openalex-team' ),
+                UPLOAD_ERR_PARTIAL    => __( 'El archivo se subió de forma incompleta. Intentá de nuevo.', 'openalex-team' ),
+                UPLOAD_ERR_NO_FILE    => __( 'No se seleccionó ningún archivo.', 'openalex-team' ),
+                UPLOAD_ERR_NO_TMP_DIR => __( 'Falta el directorio temporal en el servidor.', 'openalex-team' ),
+                UPLOAD_ERR_CANT_WRITE => __( 'No se pudo escribir el archivo en el disco del servidor.', 'openalex-team' ),
+                UPLOAD_ERR_EXTENSION  => __( 'Una extensión de PHP bloqueó la subida del archivo.', 'openalex-team' ),
+            ];
+
+            $detail = ( $upload_err !== null && isset( $upload_msgs[ $upload_err ] ) )
+                ? $upload_msgs[ $upload_err ]
+                : __( 'No fue posible procesar el CSV. Revisa el formato o el archivo.', 'openalex-team' );
+
+            echo '<div class="notice notice-error is-dismissible"><p>' . esc_html( $detail ) . '</p></div>';
         }
     }
 
