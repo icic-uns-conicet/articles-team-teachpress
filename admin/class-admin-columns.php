@@ -21,6 +21,11 @@ class OpenAlex_Admin_Columns {
         add_action( 'restrict_manage_posts', [ $this, 'taxonomy_filter_ui' ] );
         add_filter( 'parse_query',           [ $this, 'taxonomy_filter_query' ] );
 
+        // CSV import/export
+        add_action( 'admin_post_openalex_import_team_members_csv', [ $this, 'handle_import_csv' ] );
+        add_action( 'admin_post_openalex_export_team_members_csv', [ $this, 'handle_export_csv' ] );
+        add_action( 'admin_notices', [ $this, 'render_admin_notice' ] );
+
         // Quick Edit
         add_action( 'quick_edit_custom_box', [ $this, 'quick_edit_field' ], 10, 2 );
         add_action( 'save_post_team',        [ $this, 'save_openalex_id' ] );
@@ -82,19 +87,35 @@ class OpenAlex_Admin_Columns {
         if ( $post_type !== 'team' ) return;
         $selected = isset( $_GET['team_designation'] ) ? sanitize_text_field( $_GET['team_designation'] ) : '';
         $terms    = get_terms( [ 'taxonomy' => 'team_designation', 'hide_empty' => false ] );
-        if ( empty( $terms ) || is_wp_error( $terms ) ) return;        ?>
-        <select name="team_designation">
-            <option value=""><?php echo esc_html__( 'Todos los equipos', 'openalex-team' ); ?></option>
-        <?php
-        foreach ( $terms as $t ) {
-            printf(
-                '<option value="%s"%s>%s</option>',
-                esc_attr( $t->slug ),
-                selected( $selected, $t->slug, false ),
-                esc_html( $t->name )
-            );
-        } ?>
-        </select><?php
+
+        if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) : ?>
+            <select name="team_designation">
+                <option value=""><?php echo esc_html__( 'Todos los equipos', 'openalex-team' ); ?></option>
+                <?php foreach ( $terms as $t ) : ?>
+                    <option value="<?php echo esc_attr( $t->slug ); ?>"<?php selected( $selected, $t->slug, true ); ?>><?php echo esc_html( $t->name ); ?></option>
+                <?php endforeach; ?>
+            </select>
+        <?php endif; ?>
+
+        <div class="alignleft actions" style="margin-right:12px;">
+            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data" style="display:inline-flex; align-items:center; gap:8px;">
+                <input type="hidden" name="action" value="openalex_import_team_members_csv" />
+                <?php wp_nonce_field( 'openalex_import_team_members_csv', 'openalex_import_team_members_csv_nonce' ); ?>
+                <label class="screen-reader-text" for="openalex-members-csv"><?php esc_html_e( 'CSV de miembros', 'openalex-team' ); ?></label>
+                <input type="file" name="openalex_members_csv" id="openalex-members-csv" accept=".csv,text/csv" />
+                <button type="submit" class="button">
+                    <?php esc_html_e( 'Importar custom fields', 'openalex-team' ); ?>
+                </button>
+            </form>
+
+            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block; margin-left:8px;">
+                <input type="hidden" name="action" value="openalex_export_team_members_csv" />
+                <?php wp_nonce_field( 'openalex_export_team_members_csv', 'openalex_export_team_members_csv_nonce' ); ?>
+                <button type="submit" class="button button-secondary">
+                    <?php esc_html_e( 'Descargar CSV', 'openalex-team' ); ?>
+                </button>
+            </form>
+        </div><?php
     }
 
     public function taxonomy_filter_query( \WP_Query $query ): void {
@@ -106,6 +127,225 @@ class OpenAlex_Admin_Columns {
             'field'    => 'slug',
             'terms'    => sanitize_text_field( $_GET['team_designation'] ),
         ] ] );
+    }
+
+    public function handle_import_csv(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Sin permisos.', 403 );
+        }
+
+        if (
+            ! isset( $_POST['openalex_import_team_members_csv_nonce'] ) ||
+            ! wp_verify_nonce( $_POST['openalex_import_team_members_csv_nonce'], 'openalex_import_team_members_csv' )
+        ) {
+            wp_die( 'Solicitud no válida.', 403 );
+        }
+
+        if ( empty( $_FILES['openalex_members_csv']['tmp_name'] ) || ! is_uploaded_file( $_FILES['openalex_members_csv']['tmp_name'] ) ) {
+            wp_redirect( add_query_arg( [ 'post_type' => 'team', 'openalex_members_csv_status' => 'error' ], admin_url( 'edit.php' ) ) );
+            exit;
+        }
+
+        $rows = $this->parse_import_csv( $_FILES['openalex_members_csv']['tmp_name'] );
+        if ( empty( $rows ) ) {
+            wp_redirect( add_query_arg( [ 'post_type' => 'team', 'openalex_members_csv_status' => 'error' ], admin_url( 'edit.php' ) ) );
+            exit;
+        }
+
+        $updated = 0;
+        $skipped = 0;
+        $allowed_fields = [ 'openalex_id', 'googlescholar_id', 'conicet_ficha', 'orc_id' ];
+
+        foreach ( $rows as $row ) {
+            $post_id = isset( $row['id_post'] ) ? absint( $row['id_post'] ) : 0;
+            if ( $post_id < 1 ) {
+                $skipped++;
+                continue;
+            }
+
+            $team_post = get_post( $post_id );
+            if ( ! $team_post || $team_post->post_type !== 'team' ) {
+                $skipped++;
+                continue;
+            }
+
+            foreach ( $allowed_fields as $field_name ) {
+                if ( ! array_key_exists( $field_name, $row ) ) {
+                    continue;
+                }
+
+                $value = trim( (string) $row[ $field_name ] );
+                if ( $value === '' ) {
+                    continue;
+                }
+
+                $this->save_member_custom_field( $post_id, $field_name, $value );
+                $updated++;
+            }
+        }
+
+        wp_redirect(
+            add_query_arg(
+                [
+                    'post_type' => 'team',
+                    'openalex_members_csv_status' => 'imported',
+                    'openalex_members_csv_updated' => $updated,
+                    'openalex_members_csv_skipped' => $skipped,
+                ],
+                admin_url( 'edit.php' )
+            )
+        );
+        exit;
+    }
+
+    public function handle_export_csv(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Sin permisos.', 403 );
+        }
+
+        if (
+            ! isset( $_POST['openalex_export_team_members_csv_nonce'] ) ||
+            ! wp_verify_nonce( $_POST['openalex_export_team_members_csv_nonce'], 'openalex_export_team_members_csv' )
+        ) {
+            wp_die( 'Solicitud no válida.', 403 );
+        }
+
+        $team_posts = get_posts( [
+            'post_type'      => 'team',
+            'posts_per_page' => -1,
+            'post_status'    => 'any',
+            'orderby'        => 'title',
+            'order'          => 'ASC',
+        ] );
+
+        $columns = [ 'id_post', 'title', 'openalex_id', 'googlescholar_id', 'conicet_ficha', 'orc_id' ];
+
+        nocache_headers();
+        header( 'Content-Type: text/csv; charset=utf-8' );
+        header( 'Content-Disposition: attachment; filename="team-members.csv"' );
+
+        $handle = fopen( 'php://output', 'w' );
+        if ( ! $handle ) {
+            wp_die( 'No se pudo generar el CSV.', 500 );
+        }
+
+        fputcsv( $handle, $columns );
+
+        foreach ( $team_posts as $team_post ) {
+            $row = [
+                (string) $team_post->ID,
+                (string) get_the_title( $team_post->ID ),
+                (string) get_post_meta( $team_post->ID, 'openalex_id', true ),
+                (string) get_post_meta( $team_post->ID, 'googlescholar_id', true ),
+                (string) get_post_meta( $team_post->ID, 'conicet_ficha', true ),
+                (string) get_post_meta( $team_post->ID, 'orc_id', true ),
+            ];
+            fputcsv( $handle, $row );
+        }
+
+        fclose( $handle );
+        exit;
+    }
+
+    public function render_admin_notice(): void {
+        $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+        if ( ! $screen || $screen->base !== 'edit' || $screen->post_type !== 'team' ) {
+            return;
+        }
+
+        $status = isset( $_GET['openalex_members_csv_status'] ) ? sanitize_text_field( wp_unslash( $_GET['openalex_members_csv_status'] ) ) : '';
+        if ( $status === 'imported' ) {
+            $updated = absint( $_GET['openalex_members_csv_updated'] ?? 0 );
+            $skipped = absint( $_GET['openalex_members_csv_skipped'] ?? 0 );
+            echo '<div class="notice notice-success is-dismissible"><p>' . sprintf(
+                esc_html__( 'Se actualizaron %1$d campos desde el CSV. Se omitieron %2$d filas sin un id_post válido.', 'openalex-team' ),
+                $updated,
+                $skipped
+            ) . '</p></div>';
+            return;
+        }
+
+        if ( $status === 'error' ) {
+            echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'No fue posible procesar el CSV. Revisa el formato o el archivo.', 'openalex-team' ) . '</p></div>';
+        }
+    }
+
+    private function parse_import_csv( string $file_path ): array {
+        if ( ! file_exists( $file_path ) ) {
+            return [];
+        }
+
+        $handle = fopen( $file_path, 'r' );
+        if ( ! $handle ) {
+            return [];
+        }
+
+        $delimiter = $this->detect_csv_delimiter( $file_path );
+        $headers = fgetcsv( $handle, 0, $delimiter );
+        if ( empty( $headers ) ) {
+            fclose( $handle );
+            return [];
+        }
+
+        $normalized_headers = [];
+        foreach ( $headers as $index => $header ) {
+            $normalized_headers[ $index ] = strtolower( trim( (string) preg_replace( '/^\xEF\xBB\xBF/', '', $header ) ) );
+        }
+
+        $rows = [];
+        while ( ( $row = fgetcsv( $handle, 0, $delimiter ) ) !== false ) {
+            if ( empty( array_filter( $row, static function ( $value ): bool {
+                return $value !== null && $value !== '';
+            } ) ) ) {
+                continue;
+            }
+
+            $mapped_row = [];
+            foreach ( $normalized_headers as $index => $header_name ) {
+                if ( ! isset( $row[ $index ] ) ) {
+                    continue;
+                }
+
+                if ( in_array( $header_name, [ 'id_post', 'openalex_id', 'googlescholar_id', 'conicet_ficha', 'orc_id' ], true ) ) {
+                    $mapped_row[ $header_name ] = trim( (string) $row[ $index ] );
+                }
+            }
+
+            $rows[] = $mapped_row;
+        }
+
+        fclose( $handle );
+        return $rows;
+    }
+
+    private function detect_csv_delimiter( string $file_path ): string {
+        $handle = fopen( $file_path, 'r' );
+        if ( ! $handle ) {
+            return ',';
+        }
+
+        $line = fgets( $handle );
+        fclose( $handle );
+
+        if ( $line === false ) {
+            return ',';
+        }
+
+        $comma_count = substr_count( $line, ',' );
+        $semicolon_count = substr_count( $line, ';' );
+
+        return $semicolon_count > $comma_count ? ';' : ',';
+    }
+
+    private function save_member_custom_field( int $post_id, string $meta_key, string $value ): void {
+        if ( function_exists( 'update_field' ) ) {
+            $updated = update_field( $meta_key, $value, $post_id );
+            if ( $updated !== false ) {
+                return;
+            }
+        }
+
+        update_post_meta( $post_id, $meta_key, $value );
     }
 
     // ── Quick Edit ────────────────────────────────────────────────────────────
