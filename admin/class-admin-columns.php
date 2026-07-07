@@ -240,7 +240,7 @@ class OpenAlex_Admin_Columns {
                 (string) get_post_meta( $team_post->ID, 'conicet_ficha', true ),
                 (string) get_post_meta( $team_post->ID, 'orc_id', true ),
             ];
-            fputcsv( $handle, $row );
+            fputcsv( $handle, $row, ',', '"', '\\' );
         }
 
         fclose( $handle );
