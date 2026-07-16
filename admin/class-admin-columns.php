@@ -10,7 +10,45 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class OpenAlex_Admin_Columns {
 
+    /**
+     * Fields that map to post meta for team members.
+     * @var string[]
+     */
+    private array $member_meta_fields = [ 'openalex_id', 'googlescholar_id', 'conicet_ficha', 'orc_id', 'short_bio' ];
+
+    /**
+     * Columns to include in exported CSV (header order).
+     * @var string[]
+     */
+    private array $export_columns = [ 'id_post', 'title', 'openalex_id', 'googlescholar_id', 'conicet_ficha', 'orc_id' ];
+
+    /**
+     * Allowed CSV headers when parsing imports (union of id_post and meta fields).
+     * @var string[]
+     */
+    private array $csv_allowed_headers = [];
+
+    /**
+     * CSV delimiter used for import/export. Defaults to comma.
+     * @var string
+     */
+    private string $csv_delimiter = ',';
+
+    /**
+     * CSV enclosure character.
+     * @var string
+     */
+    private string $csv_enclosure = '"';
+
+    /**
+     * CSV escape character.
+     * @var string
+     */
+    private string $csv_escape = '\\';
+
     public function __construct() {
+        // Initialize CSV allowed headers from configured fields.
+        $this->csv_allowed_headers = array_merge( [ 'id_post' ], $this->member_meta_fields );
         // Columnas
         add_filter( 'manage_team_posts_columns',           [ $this, 'add_columns' ] );
         add_action( 'manage_team_posts_custom_column',     [ $this, 'render_column' ], 10, 2 );
@@ -124,7 +162,6 @@ class OpenAlex_Admin_Columns {
     }
 
     public function handle_import_csv(): void {
-        OpenAlex_Helpers::log( 'Iniciando importación de CSV de miembros del equipo...' );
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( 'Sin permisos.', 403 );
         }
@@ -161,6 +198,8 @@ class OpenAlex_Admin_Columns {
             ) );
             exit;
         }
+        
+        OpenAlex_Helpers::log( 'Iniciando importación de CSV de miembros del equipo...' );
 
         $rows = $this->parse_import_csv( $_FILES['openalex_members_csv']['tmp_name'] );
         if ( empty( $rows ) ) {
@@ -170,11 +209,10 @@ class OpenAlex_Admin_Columns {
 
         $updated = 0;
         $skipped = 0;
-        $allowed_fields = [ 'openalex_id', 'googlescholar_id', 'conicet_ficha', 'orc_id' ];
+        $allowed_fields = $this->member_meta_fields;
 
         foreach ( $rows as $row ) {
             $post_id = isset( $row['id_post'] ) ? absint( $row['id_post'] ) : 0;
-            OpenAlex_Helpers::log( 'Procesando fila de importación... id_post: ' . $post_id );
             if ( $post_id < 1 ) {
                 $skipped++;
                 continue;
@@ -235,7 +273,7 @@ class OpenAlex_Admin_Columns {
             'order'          => 'ASC',
         ] );
 
-        $columns = [ 'id_post', 'title', 'openalex_id', 'googlescholar_id', 'conicet_ficha', 'orc_id' ];
+        $columns = $this->export_columns;
 
         nocache_headers();
         header( 'Content-Type: text/csv; charset=utf-8' );
@@ -246,18 +284,20 @@ class OpenAlex_Admin_Columns {
             wp_die( 'No se pudo generar el CSV.', 500 );
         }
 
-        fputcsv( $handle, $columns );
+        fputcsv( $handle, $columns, $this->csv_delimiter, $this->csv_enclosure, $this->csv_escape );
 
         foreach ( $team_posts as $team_post ) {
-            $row = [
-                (string) $team_post->ID,
-                (string) get_the_title( $team_post->ID ),
-                (string) get_post_meta( $team_post->ID, 'openalex_id', true ),
-                (string) get_post_meta( $team_post->ID, 'googlescholar_id', true ),
-                (string) get_post_meta( $team_post->ID, 'conicet_ficha', true ),
-                (string) get_post_meta( $team_post->ID, 'orc_id', true ),
-            ];
-            fputcsv( $handle, $row, ',', '"', '\\' );
+            $row = [];
+            foreach ( $this->export_columns as $col ) {
+                if ( $col === 'id_post' ) {
+                    $row[] = (string) $team_post->ID;
+                } elseif ( $col === 'title' ) {
+                    $row[] = (string) get_the_title( $team_post->ID );
+                } else {
+                    $row[] = (string) get_post_meta( $team_post->ID, $col, true );
+                }
+            }
+            fputcsv( $handle, $row, $this->csv_delimiter, $this->csv_enclosure, $this->csv_escape );
         }
 
         fclose( $handle );
@@ -313,7 +353,8 @@ class OpenAlex_Admin_Columns {
         }
 
         $delimiter = $this->detect_csv_delimiter( $file_path );
-        $headers = fgetcsv( $handle, 0, $delimiter );
+        $this->csv_delimiter = $delimiter;
+        $headers = fgetcsv( $handle, 0, $this->csv_delimiter, $this->csv_enclosure, $this->csv_escape );
         if ( empty( $headers ) ) {
             fclose( $handle );
             return [];
@@ -325,7 +366,7 @@ class OpenAlex_Admin_Columns {
         }
 
         $rows = [];
-        while ( ( $row = fgetcsv( $handle, 0, $delimiter ) ) !== false ) {
+        while ( ( $row = fgetcsv( $handle, 0, $this->csv_delimiter, $this->csv_enclosure, $this->csv_escape ) ) !== false ) {
             if ( empty( array_filter( $row, static function ( $value ): bool {
                 return $value !== null && $value !== '';
             } ) ) ) {
@@ -337,8 +378,8 @@ class OpenAlex_Admin_Columns {
                 if ( ! isset( $row[ $index ] ) ) {
                     continue;
                 }
-
-                if ( in_array( $header_name, [ 'id_post', 'openalex_id', 'googlescholar_id', 'conicet_ficha', 'orc_id' ], true ) ) {
+                                    
+                if ( in_array( $header_name, $this->csv_allowed_headers, true ) ) {
                     $mapped_row[ $header_name ] = trim( (string) $row[ $index ] );
                 }
             }
@@ -371,12 +412,13 @@ class OpenAlex_Admin_Columns {
 
     private function save_member_custom_field( int $post_id, string $meta_key, string $value ): void {
         if ( function_exists( 'update_field' ) ) {
+            OpenAlex_Helpers::log( 'Updating post with field '. $post_id . ' meta_key ' . $meta_key );
             $updated = update_field( $meta_key, $value, $post_id );
             if ( $updated !== false ) {
                 return;
             }
         }
-
+        OpenAlex_Helpers::log( 'Updating post '. $post_id . ' meta_key ' . $meta_key );
         update_post_meta( $post_id, $meta_key, $value );
     }
 
